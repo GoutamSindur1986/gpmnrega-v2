@@ -1,0 +1,172 @@
+@page "/about"
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "About Us";
+}
+
+<style>
+.page-hero{background:linear-gradient(135deg,#1e1b6e 0%,#3730a3 60%,#4f46e5 100%);color:#fff;padding:56px 0 40px;position:relative;overflow:hidden;margin:-24px -15px 0}
+.page-hero h1{font-size:clamp(2rem,4vw,2.6rem);font-weight:800;margin-bottom:10px;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:6px 16px;font-size:.82rem;font-weight:500;margin-bottom:18px;position:relative}
+.about-tabs{background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:60px;z-index:40;margin:-8px -15px 0}
+.about-tabs .nav-link{font-size:.9rem;font-weight:500;color:#64748b;border:none;border-bottom:3px solid transparent;border-radius:0;padding:14px 20px;transition:all .15s}
+.about-tabs .nav-link.active,.about-tabs .nav-link:hover{color:#3730a3;border-bottom-color:#3730a3;background:none}
+.stat-num{font-size:2.2rem;font-weight:800;color:#3730a3;line-height:1}
+.stat-label{font-size:.82rem;color:#64748b;margin-top:4px}
+.feature-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;height:100%;transition:all .2s}
+.feature-card:hover{box-shadow:0 6px 24px rgba(55,48,163,.08);transform:translateY(-2px)}
+.sec-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.kv-row{display:flex;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:.87rem}
+.kv-row:last-child{border-bottom:none}
+.kv-label{font-weight:600;color:#374151;min-width:130px}
+.kv-val{color:#64748b}
+</style>
+
+<div class="page-hero text-center">
+  <div class="container">
+    <div class="hero-badge"><i class="bi bi-flower1"></i> GP MNREGA — Karnataka's Gram Panchayat Reporting Platform</div>
+    <h1>Empowering Gram Panchayats<br/>across Karnataka</h1>
+    <p style="opacity:.85;font-size:.95rem;max-width:540px;margin:0 auto">Making NREGA work reporting simple, accurate and accessible for every GP officer.</p>
+  </div>
+</div>
+
+<div class="bg-white border-bottom mb-0">
+  <div class="container">
+    <div class="row g-0 text-center">
+      <div class="col-6 col-md-3 border-end"><div class="py-4"><div class="stat-num">1500+</div><div class="stat-label">Registered GPs</div></div></div>
+      <div class="col-6 col-md-3 border-end"><div class="py-4"><div class="stat-num">2021</div><div class="stat-label">Founded</div></div></div>
+      <div class="col-6 col-md-3 border-end"><div class="py-4"><div class="stat-num">21+</div><div class="stat-label">Report Types</div></div></div>
+      <div class="col-6 col-md-3"><div class="py-4"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="about-tabs">
+  <div class="container">
+    <ul class="nav" id="aboutTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-gp">GP MNREGA Platform</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-s3kn">About S3KN Software</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-compliance">Compliance &amp; Security</button></li>
+    </ul>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="tab-content">
+
+    <!-- Tab 1: GP MNREGA -->
+    <div class="tab-pane fade show active" id="tab-gp">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <h2 style="font-size:1.5rem;font-weight:700;color:#1e1b6e;margin-bottom:14px">What is GP MNREGA?</h2>
+          <p style="color:#64748b;line-height:1.8;font-size:.93rem">
+            <strong style="color:#374151">www.gpmnrega.com</strong> is a reporting platform for Karnataka Gram Panchayat officers — PDOs, computer operators, and members — to generate official MGNREGA work reports quickly and accurately.
+          </p>
+          <p style="color:#64748b;line-height:1.8;font-size:.93rem">
+            The platform uses publicly available data from the <a href="https://nrega.nic.in" target="_blank" rel="noopener" style="color:#3730a3">MGNREGA portal</a> and combines it with your inputs to produce print-ready, Kannada-localised PDFs.
+          </p>
+          <div class="p-3 rounded-3 mt-3" style="background:#ede9fe;border:1px solid #c4b5fd">
+            <div class="d-flex gap-2 align-items-start">
+              <i class="bi bi-info-circle-fill" style="color:#3730a3;margin-top:2px;flex-shrink:0"></i>
+              <small style="color:#4c1d95">GP MNREGA is not affiliated with or endorsed by MGNREGA, NIC, or any Government of India body. All government data used is publicly available.</small>
+            </div>
+          </div>
+          <div class="mt-4 p-3 rounded-3" style="background:#fff;border:1px solid #e2e8f0">
+            <h6 style="font-weight:700;color:#1e1b6e;margin-bottom:14px"><i class="bi bi-arrow-right-circle-fill me-2" style="color:#3730a3"></i>How It Works</h6>
+            <div class="row g-2 text-center">
+              <div class="col-6"><div class="mx-auto mb-1 d-flex align-items-center justify-content-center rounded-circle" style="width:36px;height:36px;background:#3730a3;color:#fff;font-weight:700;font-size:.9rem">1</div><div style="font-weight:600;font-size:.82rem;color:#1e1b6e">Register</div><div style="font-size:.75rem;color:#94a3b8">GP code + email</div></div>
+              <div class="col-6"><div class="mx-auto mb-1 d-flex align-items-center justify-content-center rounded-circle" style="width:36px;height:36px;background:#3730a3;color:#fff;font-weight:700;font-size:.9rem">2</div><div style="font-weight:600;font-size:.82rem;color:#1e1b6e">Search Work Code</div><div style="font-size:.75rem;color:#94a3b8">We fetch NIC data automatically</div></div>
+              <div class="col-6"><div class="mx-auto mb-1 d-flex align-items-center justify-content-center rounded-circle" style="width:36px;height:36px;background:#3730a3;color:#fff;font-weight:700;font-size:.9rem">3</div><div style="font-weight:600;font-size:.82rem;color:#1e1b6e">Generate Reports</div><div style="font-size:.75rem;color:#94a3b8">NIC data + your inputs</div></div>
+              <div class="col-6"><div class="mx-auto mb-1 d-flex align-items-center justify-content-center rounded-circle" style="width:36px;height:36px;background:#3730a3;color:#fff;font-weight:700;font-size:.9rem">4</div><div style="font-weight:600;font-size:.82rem;color:#1e1b6e">Download &amp; Print</div><div style="font-size:.75rem;color:#94a3b8">Print-ready Kannada PDFs</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="row g-3">
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#ede9fe"><i class="bi bi-file-earmark-text-fill" style="color:#7c3aed"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Cover Page &amp; Work Order</div><div style="font-size:.77rem;color:#94a3b8">Auto-generated with GP details and NIC data</div></div></div>
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#dbeafe"><i class="bi bi-people-fill" style="color:#1d4ed8"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Form 6 — Work Application</div><div style="font-size:.77rem;color:#94a3b8">Group and Individual registers</div></div></div>
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#d1fae5"><i class="bi bi-calendar-check-fill" style="color:#047857"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Form 8 — Work Allocation</div><div style="font-size:.77rem;color:#94a3b8">NMR-based with Kannada support</div></div></div>
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#fef3c7"><i class="bi bi-bell-fill" style="color:#b45309"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Form 9 — Attendance Notice</div><div style="font-size:.77rem;color:#94a3b8">Muster roll-based forms</div></div></div>
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#fce7f3"><i class="bi bi-check2-all" style="color:#9d174d"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Completion &amp; Checklist</div><div style="font-size:.77rem;color:#94a3b8">Completion certificates and checklists</div></div></div>
+            <div class="col-6"><div class="feature-card"><div class="sec-icon mb-2" style="background:#e0f2fe"><i class="bi bi-journal-text" style="color:#0369a1"></i></div><div style="font-weight:600;font-size:.85rem;color:#1e1b6e;margin-bottom:3px">Cashbooks &amp; Registers</div><div style="font-size:.77rem;color:#94a3b8">Register III, V, FTO details</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: S3KN -->
+    <div class="tab-pane fade" id="tab-s3kn">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <h2 style="font-size:1.5rem;font-weight:700;color:#1e1b6e;margin-bottom:14px">S3KN Software Solutions Pvt. Ltd.</h2>
+          <p style="color:#64748b;line-height:1.8;font-size:.93rem">S3KN Software Solutions is an Indian technology company incorporated in 2021, headquartered in Mysuru, Karnataka. We build software products and provide IT services and business process outsourcing to clients across India and globally.</p>
+          <p style="color:#64748b;line-height:1.8;font-size:.93rem">GP MNREGA is our flagship product — built out of first-hand understanding of the challenges faced by Gram Panchayat officers in Karnataka.</p>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6"><div class="p-3 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0"><h6 style="font-weight:700;color:#15803d;margin-bottom:6px"><i class="bi bi-eye-fill me-1"></i>Our Vision</h6><p style="font-size:.84rem;color:#374151;margin:0">To be the technology partner of choice for government and enterprise customers — enabling long-term sustainable growth.</p></div></div>
+            <div class="col-md-6"><div class="p-3 rounded-3" style="background:#ede9fe;border:1px solid #c4b5fd"><h6 style="font-weight:700;color:#5b21b6;margin-bottom:6px"><i class="bi bi-bullseye me-1"></i>Our Mission</h6><p style="font-size:.84rem;color:#374151;margin:0">Deliver high-quality, cost-effective IT solutions that help customers achieve their business and operational goals.</p></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="p-4 rounded-3" style="background:#fff;border:1px solid #e2e8f0">
+            <h6 style="font-weight:700;color:#1e1b6e;margin-bottom:14px">Company Details</h6>
+            <div class="kv-row"><span class="kv-label">Founded</span><span class="kv-val">2021</span></div>
+            <div class="kv-row"><span class="kv-label">Type</span><span class="kv-val">Private Limited</span></div>
+            <div class="kv-row"><span class="kv-label">HQ</span><span class="kv-val">Mysuru, Karnataka</span></div>
+            <div class="kv-row"><span class="kv-label">Industry</span><span class="kv-val">IT Products &amp; Services</span></div>
+            <div class="kv-row"><span class="kv-label">Email</span><span class="kv-val"><a href="mailto:admin@gpmnrega.com" style="color:#3730a3">admin@@gpmnrega.com</a></span></div>
+            <div class="kv-row"><span class="kv-label">Address</span><span class="kv-val">SY 953/*/P2 107, Sai Park Ring Road, Vijayapur 586109</span></div>
+          </div>
+        </div>
+      </div>
+      <h5 style="font-weight:700;color:#1e1b6e;margin-bottom:14px">Products &amp; Services</h5>
+      <div class="row g-3">
+        <div class="col-md-6 col-lg-3"><div class="feature-card"><div class="d-flex align-items-center gap-2 mb-2"><div class="sec-icon" style="background:#ede9fe"><i class="bi bi-flower1" style="color:#7c3aed"></i></div><div><div style="font-weight:700;font-size:.88rem;color:#1e1b6e">GP MNREGA</div><span class="badge" style="background:#d1fae5;color:#15803d;font-size:.7rem">Live</span></div></div><p style="font-size:.8rem;color:#64748b;margin:0">NREGA report platform for Karnataka GPs</p></div></div>
+        <div class="col-md-6 col-lg-3"><div class="feature-card"><div class="d-flex align-items-center gap-2 mb-2"><div class="sec-icon" style="background:#dbeafe"><i class="bi bi-chat-dots-fill" style="color:#1d4ed8"></i></div><div><div style="font-weight:700;font-size:.88rem;color:#1e1b6e">WebChat Automation</div><span class="badge" style="background:#fef3c7;color:#92400e;font-size:.7rem">Coming Soon</span></div></div><p style="font-size:.8rem;color:#64748b;margin:0">AI-powered WhatsApp, Web &amp; SMS automation</p></div></div>
+        <div class="col-md-6 col-lg-3"><div class="feature-card"><div class="d-flex align-items-center gap-2 mb-2"><div class="sec-icon" style="background:#fce7f3"><i class="bi bi-instagram" style="color:#9d174d"></i></div><div><div style="font-weight:700;font-size:.88rem;color:#1e1b6e">Instagram Automation</div><span class="badge" style="background:#fef3c7;color:#92400e;font-size:.7rem">Coming Soon</span></div></div><p style="font-size:.8rem;color:#64748b;margin:0">Auto-reply DMs, schedule posts, grow followers</p></div></div>
+        <div class="col-md-6 col-lg-3"><div class="feature-card"><div class="d-flex align-items-center gap-2 mb-2"><div class="sec-icon" style="background:#dbeafe"><i class="bi bi-facebook" style="color:#1e40af"></i></div><div><div style="font-weight:700;font-size:.88rem;color:#1e1b6e">Facebook Automation</div><span class="badge" style="background:#fef3c7;color:#92400e;font-size:.7rem">Coming Soon</span></div></div><p style="font-size:.8rem;color:#64748b;margin:0">Manage pages, auto-respond to comments at scale</p></div></div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Compliance -->
+    <div class="tab-pane fade" id="tab-compliance">
+      <div class="p-4 rounded-3 mb-4" style="background:linear-gradient(135deg,#1e1b6e,#3730a3);color:#fff">
+        <div class="d-flex align-items-start gap-3">
+          <i class="bi bi-shield-fill-check" style="font-size:2rem;margin-top:2px;color:#4ade80;flex-shrink:0"></i>
+          <div>
+            <h5 style="font-weight:700;margin-bottom:8px">Digital Personal Data Protection Act, 2023 (DPDP Act)</h5>
+            <p style="font-size:.9rem;opacity:.9;margin:0">GP MNREGA and S3KN Software Solutions Pvt. Ltd. are fully committed to the <strong>DPDP Act 2023</strong> — India's landmark data privacy legislation. As a Data Fiduciary, we process your personal data only for lawful purposes with appropriate safeguards.</p>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="p-4 rounded-3 h-100" style="background:#fff;border:1px solid #e2e8f0">
+            <h5 style="font-weight:700;color:#1e1b6e;margin-bottom:14px"><i class="bi bi-person-check-fill me-2" style="color:#3730a3"></i>Your Rights Under DPDP Act 2023</h5>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-eye" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Right to Access</div><div style="font-size:.8rem;color:#64748b">Request a copy of all personal data we hold.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-pencil-square" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Right to Correction</div><div style="font-size:.8rem;color:#64748b">Request correction of inaccurate or incomplete data.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-trash3" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Right to Erasure</div><div style="font-size:.8rem;color:#64748b">Request deletion of your account and personal data.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-x-circle" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Right to Withdraw Consent</div><div style="font-size:.8rem;color:#64748b">Withdraw consent at any time by closing your account.</div></div></div>
+            <div class="d-flex gap-3"><i class="bi bi-exclamation-triangle" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Right to Grievance Redressal</div><div style="font-size:.8rem;color:#64748b">File a complaint with us or the Data Protection Board of India.</div></div></div>
+            <div class="mt-3 p-3 rounded-2" style="background:#f0fdf4;border:1px solid #bbf7d0"><small style="color:#15803d"><i class="bi bi-envelope-fill me-1"></i>Email <strong>admin@@gpmnrega.com</strong> with subject "Data Rights Request". We respond within 30 days.</small></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="p-4 rounded-3 h-100" style="background:#fff;border:1px solid #e2e8f0">
+            <h5 style="font-weight:700;color:#1e1b6e;margin-bottom:14px"><i class="bi bi-shield-lock-fill me-2" style="color:#3730a3"></i>Security Measures</h5>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-lock-fill" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">HTTPS / TLS 1.2+ Encryption</div><div style="font-size:.8rem;color:#64748b">All data in transit is encrypted.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-key-fill" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">BCrypt Password Hashing</div><div style="font-size:.8rem;color:#64748b">Passwords stored as irreversible hashes — we cannot read them.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-incognito" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">HttpOnly Auth Cookies</div><div style="font-size:.8rem;color:#64748b">Auth cookies inaccessible to browser scripts — prevents XSS.</div></div></div>
+            <div class="d-flex gap-3 mb-3"><i class="bi bi-person-lock" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">Data Minimisation</div><div style="font-size:.8rem;color:#64748b">We only collect data strictly necessary for the service.</div></div></div>
+            <div class="d-flex gap-3"><i class="bi bi-globe2" style="color:#3730a3;flex-shrink:0;margin-top:3px"></i><div><div style="font-weight:600;font-size:.87rem;color:#374151">No Third-Party Sale</div><div style="font-size:.8rem;color:#64748b">Your data is never sold, rented, or shared for marketing — ever.</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="/privacypolicy" class="btn btn-sm" style="background:#3730a3;color:#fff;border-radius:8px"><i class="bi bi-file-earmark-text me-1"></i> Full Privacy Policy</a>
+        <a href="/termsandconditions" class="btn btn-sm btn-outline-secondary" style="border-radius:8px"><i class="bi bi-file-earmark-check me-1"></i> Terms &amp; Conditions</a>
+        <a href="/contact" class="btn btn-sm btn-outline-secondary" style="border-radius:8px"><i class="bi bi-envelope me-1"></i> Data Rights Request</a>
+      </div>
+    </div>
+
+  </div>
+</div>

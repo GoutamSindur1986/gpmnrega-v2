@@ -1,0 +1,852 @@
+@page "/Auth/Home"
+@model GpMnrega.Web.Pages.Auth.HomeModel
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Panchayat Home";
+    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+    var panchayatCode = User.FindFirst("PanchayatCode")?.Value ?? "";
+    var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "";
+
+    // Geographic data — read directly from claims (set during login from AuthenticateUser SP)
+    // Same data that the original WebForms put into the UserData cookie
+    var gpName = User.FindFirst("PanchyatName")?.Value ?? "";
+    var gpNameRegional = User.FindFirst("PanchayatNameRegional")?.Value ?? "";
+    var districtName = User.FindFirst("DistrictName")?.Value ?? "";
+    var districtCode = User.FindFirst("DistrictCode")?.Value ?? "";
+    var districtNameRegional = User.FindFirst("DistrictNameRegional")?.Value ?? "";
+    var blockName = User.FindFirst("TalukName")?.Value ?? "";
+    var blockCode = User.FindFirst("TalukCode")?.Value ?? "";
+    var blockNameRegional = User.FindFirst("TalukNameRegional")?.Value ?? "";
+    var vidhanSabha = User.FindFirst("VidhanSabha")?.Value ?? "";
+    var lokSabha = User.FindFirst("LokSabha")?.Value ?? "";
+}
+
+@section Styles {
+    <style>
+        /* ── Financial year bar ─────────────────────────── */
+        .fy-bar {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            margin-bottom: 0;
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+        }
+
+            .fy-bar .input-group {
+                max-width: 420px
+            }
+
+            .fy-bar select {
+                border: 1.5px solid #e2e8f0;
+                border-radius: 8px 0 0 8px;
+                font-size: .88rem;
+                font-family: 'Poppins',sans-serif;
+                padding: 8px 12px;
+                background: #f8faff;
+            }
+
+            .fy-bar .btn-search {
+                background: var(--brand);
+                color: #fff;
+                border: none;
+                border-radius: 0 8px 8px 0;
+                padding: 8px 20px;
+                font-size: .88rem;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: all .2s;
+            }
+
+                .fy-bar .btn-search:hover {
+                    background: var(--brand-light)
+                }
+
+        .search-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+            .search-input-wrap input {
+                width: 100%;
+                padding: 8px 14px 8px 36px;
+                border: 1.5px solid #e2e8f0;
+                border-right: none;
+                font-size: .88rem;
+                font-family: 'Poppins',sans-serif;
+                background: #f8faff;
+                outline: none;
+            }
+
+            .search-input-wrap .si {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+                font-size: .9rem;
+                pointer-events: none;
+            }
+
+        /* ── Work overview card ─────────────────────────── */
+        .work-overview {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .work-overview-header {
+            background: linear-gradient(135deg,var(--brand-dark),var(--brand));
+            color: #fff;
+            padding: 20px 24px;
+        }
+
+            .work-overview-header h2 {
+                font-size: 1.05rem;
+                font-weight: 600;
+                margin: 0 0 16px;
+            }
+
+        .wo-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .wo-item {
+            font-size: .82rem;
+            min-width: 0;
+        }
+
+        .wo-full  { grid-column: 1 / -1; }
+        .wo-third { grid-column: span 2; }
+        .wo-half  { grid-column: span 2; }
+
+        @@media (max-width: 576px) {
+            .wo-grid { grid-template-columns: 1fr; }
+            .wo-third, .wo-half { grid-column: 1 / -1; }
+        }
+
+        .wo-label {
+            opacity: .75;
+            margin-bottom: 2px;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .wo-value {
+            font-weight: 600;
+            font-size: .88rem;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16,185,129,.2);
+            color: #10b981
+        }
+
+        .status-closed {
+            background: rgba(239,68,68,.15);
+            color: #ef4444
+        }
+
+        /* ── Work forms button bar ───────────────────────── */
+        .work-forms-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 25px;
+            padding: 16px 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8faff;
+        }
+
+            .work-forms-bar .wf-label {
+                width: 100%;
+                font-size: .72rem;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: .05em;
+                margin-bottom: 2px;
+            }
+
+        .wf-btn {
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: .8rem;
+            font-weight: 600;
+            border: 1.5px solid var(--brand);
+            color: var(--brand);
+            background: #fff;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .wf-btn:hover {
+                background: var(--brand);
+                color: #fff
+            }
+
+        /* ── NMR list ────────────────────────────────────── */
+        .nmr-list {
+            list-style: none;
+            
+            margin: 0
+        }
+
+        .nmr-item {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+            .nmr-item:last-child {
+                border-bottom: none
+            }
+
+        .nmr-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+            font-weight: 600;
+            color: #1e1b6e;
+            font-size: .88rem;
+        }
+
+        .nmr-period {
+            font-size: .76rem;
+            color: #94a3b8;
+            font-weight: 400
+        }
+
+        .nmr-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .nmr-btn {
+            padding: 5px 14px;
+            border-radius: 7px;
+            font-size: .78rem;
+            font-weight: 600;
+            border: 1.5px solid var(--brand);
+            color: var(--brand);
+            background: #fff;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .nmr-btn:hover {
+                background: var(--brand);
+                color: #fff
+            }
+
+            .nmr-btn.primary {
+                background: var(--brand);
+                color: #fff
+            }
+
+                .nmr-btn.primary:hover {
+                    background: var(--brand-dark)
+                }
+
+        .nmr-dl-icon {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            color: var(--brand);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .nmr-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: #94a3b8;
+            font-size: .9rem;
+        }
+
+            .nmr-empty i {
+                font-size: 2.5rem;
+                display: block;
+                margin-bottom: 8px;
+                opacity: .4
+            }
+
+        /* ── Stats sidebar ───────────────────────────────── */
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card-title {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8faff;
+            font-size: .85rem;
+        }
+
+            .stat-row:last-child {
+                border-bottom: none
+            }
+
+            .stat-row .label {
+                color: #374151;
+                display: flex;
+                align-items: center;
+                gap: 8px
+            }
+
+                .stat-row .label i {
+                    font-size: .9rem;
+                    width: 18px;
+                    text-align: center
+                }
+
+            .stat-row .val {
+                font-weight: 700;
+                color: #1e1b6e;
+                font-size: .95rem
+            }
+
+        .progress-bar-mini {
+            height: 5px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            margin: 3px 0 0;
+            overflow: hidden;
+        }
+
+            .progress-bar-mini span {
+                display: block;
+                height: 100%;
+                border-radius: 3px;
+                background: linear-gradient(90deg,var(--brand),var(--brand-light));
+            }
+
+        /* ── GP name badge ─────────────────────────────── */
+        .gp-name-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg,var(--brand-dark),var(--brand));
+            color: #fff;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+            white-space: nowrap;
+        }
+
+            .gp-name-badge i {
+                font-size: .9rem;
+                opacity: .8
+            }
+
+        /* ── jQuery UI Autocomplete ──────────────────────── */
+        .ui-autocomplete {
+            max-height: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+            z-index: 1050;
+            padding: 4px 0;
+            list-style: none;
+        }
+
+        .ui-menu-item {
+            padding: 0
+        }
+
+        .ui-menu-item-wrapper {
+            padding: 8px 14px;
+            font-size: .82rem;
+            color: #374151;
+            cursor: pointer;
+            font-family: 'Poppins',sans-serif;
+        }
+
+            .ui-menu-item-wrapper.ui-state-active,
+            .ui-menu-item-wrapper:hover {
+                background: var(--brand-light,#eef2ff);
+                color: var(--brand);
+            }
+
+        .ui-helper-hidden-accessible {
+            display: none
+        }
+
+        /* ── Loading skeletons ──────────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+            border-radius: 6px;
+        }
+
+        @@keyframes shimmer {
+            0% {
+                background-position: 100% 50%
+            }
+
+            100% {
+                background-position: 0% 50%
+            }
+        }
+        /* Inline loading state inside stat cards */
+        .stat-loading {
+            display: flex;
+            align-items: center;
+            color: #94a3b8;
+            font-size: .82rem;
+            padding: 8px 0;
+        }
+
+    </style>
+}
+
+<!-- ── Financial Year Bar ──────────────────────────── -->
+<div class="fy-bar">
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            @if (!string.IsNullOrEmpty(gpName))
+            {
+                <span class="gp-name-badge">
+                    <i class="bi bi-geo-alt-fill"></i> @gpName
+                </span>
+            }
+            <label class="fw-600" style="font-size:.88rem;color:#374151;white-space:nowrap">
+                <i class="bi bi-calendar3 me-1"></i> Financial Year:
+            </label>
+            <div class="input-group" style="max-width:650px;flex:1">
+                <select id="ddlyear" class="form-select" style="border-radius:8px 0 0 8px;max-width:140px">
+                    <option value="2026-2027" selected>2026-2027</option>
+                    <option value="2025-2026">2025-2026</option>
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2023-2024">2023-2024</option>
+                    <option value="2022-2023">2022-2023</option>
+                </select>
+                <div class="search-input-wrap">
+                    <i class="bi bi-search si"></i>
+                    <input type="text" id="txtSearchWork"
+                           placeholder="Search Work Code e.g. 1507002032/RC/..."
+                           style="height:100%" />
+                </div>
+                <button class="btn-search" id="btnSearch">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    id="btnAllWorks" title="Load all works for my Panchayat">
+                <i class="bi bi-grid"></i>
+                <span class="d-none d-md-inline">All Works</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Main Content ─────────────────────────────────── -->
+<div class="container-fluid px-4 mt-3">
+    <div class="row g-3">
+
+        <!-- ── Left / Main column ───────────────────── -->
+        <div class="col-12 col-lg-8">
+
+            <!-- Work Forms button bar (mirrors original Home.aspx button row) -->
+            <div id="workFormsBar" class="work-forms-bar" style="display:none">
+                <span class="wf-label"><i class="bi bi-folder2-open me-1"></i>Work Forms</span>
+                <button class="wf-btn" onclick="downloadPage('CoverPage')">
+                    <i class="bi bi-file-earmark-text"></i> Cover Page
+                </button>
+                <button class="wf-btn" onclick="downloadPage('WorkOrder')">
+                    <i class="bi bi-file-text"></i> Work Order
+                </button>
+                <button class="wf-btn" onclick="downloadPage('completion')">
+                    <i class="bi bi-check-circle"></i> Work Completion
+                </button>
+                <button class="wf-btn" onclick="downloadPage('checklist')">
+                    <i class="bi bi-checklist"></i> Check List
+                </button>
+                <button class="wf-btn" onclick="downloadPage('musterrolemov')">
+                    <i class="bi bi-arrow-left-right"></i> Muster Roll Movement
+                </button>
+                <button class="wf-btn" onclick="downloadPage('geotag')">
+                    <i class="bi bi-geo-alt"></i> GeoTag
+                </button>
+            </div>
+
+            <!-- Work Overview Card -->
+            <div class="work-overview mb-3" id="workOverviewCard" style="display:none">
+                <div class="work-overview-header">
+                    <h2><i class="bi bi-clipboard-data me-2"></i>Work Overview</h2>
+                    <div class="wo-grid" id="woGrid">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+
+                <!-- NMR list (always visible below work forms bar) -->
+                <ul class="nmr-list" id="ulNmrList">
+                    <li class="nmr-empty">
+                        <i class="bi bi-search"></i>
+                        Search for a work code above to load NMR details
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Empty state -->
+            <div class="gp-card p-5 text-center" id="emptyState">
+                <i class="bi bi-search" style="font-size:3rem;color:#c7d2fe;display:block;margin-bottom:16px"></i>
+                <h5 style="color:#1e1b6e;margin-bottom:8px">Search for a Work</h5>
+                <p style="color:#94a3b8;font-size:.9rem;margin:0">
+                    Enter a work code above or click "All Works" to load your Panchayat's works.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Right / Stats sidebar ─────────────────── -->
+        <div class="col-12 col-lg-4">
+
+            <!-- ① Works ─────────────────────────────────────────── -->
+            <div class="stat-card" id="worksStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-tools" style="color:var(--brand)"></i> Works
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-check-circle-fill" style="color:#10b981"></i>Approved</span>
+                    <span class="val" id="appWork"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-play-circle-fill" style="color:#3b82f6"></i>Ongoing</span>
+                    <span class="val" id="ongoingWork">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-check2-all" style="color:#8b5cf6"></i>Completed</span>
+                    <span class="val" id="completedWork">—</span>
+                </div>
+            </div>
+
+            <!-- ② Job Cards & Persons ───────────────────────────── -->
+            <div class="stat-card" id="jobCardsStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-person-vcard" style="color:#7c3aed"></i> Job Cards &amp; Persons
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-people-fill" style="color:#7c3aed"></i>Total (JC &amp; HH)</span>
+                    <span class="val" id="totaljobcard"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#a78bfa"></i>SC (JC &amp; HH)</span>
+                    <span class="val" id="scjobcard">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#c4b5fd"></i>ST (JC &amp; HH)</span>
+                    <span class="val" id="stjobcard">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person" style="color:#94a3b8"></i>Others (JC &amp; HH)</span>
+                    <span class="val" id="otherjobcard">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-gender-male" style="color:#2563eb"></i>Men</span>
+                    <span class="val" id="jobcardMen">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-gender-female" style="color:#db2777"></i>Women</span>
+                    <span class="val" id="jobcardWomen">—</span>
+                </div>
+            </div>
+
+            <!-- ③ Person Days ──────────────────────────────────── -->
+            <div class="stat-card" id="employmentStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-people" style="color:#0891b2"></i> Person Days
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-calendar-check-fill" style="color:#0891b2"></i>Total</span>
+                    <span class="val" id="totalPersondays"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#a78bfa"></i>SC</span>
+                    <span class="val" id="scPersondays">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#c4b5fd"></i>ST</span>
+                    <span class="val" id="stPersondays">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-gender-female" style="color:#db2777"></i>Women</span>
+                    <span class="val" id="womenPersondays">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person" style="color:#94a3b8"></i>Others</span>
+                    <span class="val" id="otherPersondays">—</span>
+                </div>
+            </div>
+
+            <!-- ④ Persons Employment Provided ─────────────────── -->
+            <div class="stat-card" id="personsStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-person-check" style="color:#059669"></i> Persons Employment Provided
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-workspace" style="color:#059669"></i>Total</span>
+                    <span class="val" id="totalpersoncard"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#a78bfa"></i>SC</span>
+                    <span class="val" id="scpersoncard">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-fill" style="color:#c4b5fd"></i>ST</span>
+                    <span class="val" id="stpersoncard">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person" style="color:#94a3b8"></i>Others</span>
+                    <span class="val" id="otherpersoncard">—</span>
+                </div>
+            </div>
+
+            <!-- ⑤ Disabled Persons ──────────────────────────────── -->
+            <div class="stat-card" id="disabledStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-person-wheelchair" style="color:#d97706"></i> Disabled Persons
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-person-plus-fill" style="color:#d97706"></i>Registered</span>
+                    <span class="val" id="disabledjobcard"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-briefcase-fill" style="color:#f59e0b"></i>Worked</span>
+                    <span class="val" id="disabledperswork">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-calendar2-check" style="color:#fbbf24"></i>Person Days</span>
+                    <span class="val" id="disabledwork">—</span>
+                </div>
+            </div>
+
+            <!-- ⑥ E-MusterRoll ─────────────────────────────────── -->
+            <div class="stat-card" id="emusterStatCard">
+                <div class="stat-card-title">
+                    <i class="bi bi-credit-card" style="color:#0e7490"></i> E-MusterRoll
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-file-earmark-text-fill" style="color:#0e7490"></i>Issued</span>
+                    <span class="val" id="issuedNmr"><span class="spinner-border spinner-border-sm"></span></span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-check-square-fill" style="color:#0891b2"></i>Filled</span>
+                    <span class="val" id="filledNmr">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label"><i class="bi bi-dash-circle-fill" style="color:#ef4444"></i>Zero Attendance</span>
+                    <span class="val" id="zeroattendence">—</span>
+                </div>
+            </div>
+
+            <!-- sidebarSkeleton — hidden, cards carry own loading state -->
+            <div id="sidebarSkeleton" style="display:none"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Comparative Statement Modal ──────────────────────────────── -->
+<div class="modal fade" id="cmpstatmodule" tabindex="-1"
+     aria-labelledby="cmpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header"
+                 style="background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:#fff;padding:16px 20px">
+                <h5 class="modal-title" id="cmpModalLabel" style="font-size:1rem;font-weight:600">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                    Invitation / Comparative Statement / Supply Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding:20px 24px">
+                <!-- 4 date inputs -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="font-size:.8rem">Invitation Date</label>
+                        <input type="date" id="invitationDate" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="font-size:.8rem">Comparative Date</label>
+                        <input type="date" id="ComparativeDate" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="font-size:.8rem">Supply Order Date</label>
+                        <input type="date" id="supOrderDate" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="font-size:.8rem">Supply Date</label>
+                        <input type="date" id="supDate" class="form-control form-control-sm" />
+                    </div>
+                </div>
+                <!-- Vendor + materials table — populated dynamically by buildCmpStatement() -->
+                <div id="vendorTbl" style="width:100%;overflow-x:auto"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="generateCMPStatement()">
+                    <i class="bi bi-download me-1"></i>Generate Statement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden cmptable template — cloned into #vendorTbl by buildCmpStatement() -->
+<div id="cmptemptable" style="display:none">
+    <table class="cmptable" style="border:2px solid black;border-collapse:collapse;width:100%" border="1">
+        <tr style="border-bottom:3px solid cornflowerblue">
+            <th style="font-size:.7em;text-align:center">
+                <label for="selectedmat">Select</label>
+                <input type="checkbox" id="selectedmat" onchange="selectmat(this)" />
+            </th>
+            <th style="font-size:.7em;text-align:center">ಕ್ರ.ಸಂ.</th>
+            <th style="font-size:.7em;text-align:center;word-wrap:break-word">ಸಾಮಗ್ರಿ</th>
+            <th style="font-size:.7em;text-align:center">ಪ್ರಮಾಣ</th>
+            <th style="font-size:.7em;text-align:center">ದರ (SR)</th>
+            <th style="font-size:.7em;text-align:center">
+                ಭಾಗವಹಿಸಿದವರ-1<br />
+                <span>GST</span>
+                <div id="vnd1autocomplete">
+                    <input type="text" class="vnd_1_Gst vendor" aria-label="vender1gst" id="vnd1gst" />
+                </div><br />
+                <span>Name</span>
+                <input type="text" id="participant1name" value="" /><br />
+                <span>Address</span>
+                <textarea aria-label="vender1" class="participant1"
+                          style="border-radius:5px;height:75px;width:160px;border-width:2px;border-color:cornflowerblue;resize:none"></textarea>
+            </th>
+            <th style="font-size:.7em;text-align:center">
+                ಭಾಗವಹಿಸಿದವರ-2<br />
+                <span>GST</span>
+                <input type="text" aria-label="vender2gst" class="vnd_2_Gst vendor" id="vnd2gst" /><br />
+                <span>Name</span>
+                <input type="text" id="participant2name" value="" /><br />
+                <span>Address</span>
+                <textarea aria-label="vender2" class="participant2"
+                          style="border-radius:5px;height:75px;width:160px;border-width:2px;border-color:cornflowerblue;resize:none"></textarea>
+            </th>
+            <th style="font-size:.7em;text-align:center">
+                ಭಾಗವಹಿಸಿದವರ-3<br />
+                <span>GST</span>
+                <input type="text" aria-label="vender3gst" class="vnd_3_Gst vendor" id="vnd3gst" /><br />
+                <span>Name</span>
+                <input type="text" id="participant3name" value="" /><br />
+                <span>Address</span>
+                <textarea aria-label="vender3" class="participant3"
+                          style="border-radius:5px;height:75px;width:160px;border-width:2px;border-color:cornflowerblue;resize:none"></textarea>
+            </th>
+        </tr>
+    </table>
+</div>
+
+<!-- Hidden WASM mount point for PDF generation -->
+<div id="wasm-root" style="display:none"></div>
+
+@section Scripts {
+    <!-- jQuery UI for autocomplete -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+
+    <!-- Existing jQuery scripts — unchanged, just update API paths -->
+    <script src="~/js/wasm-bridge.js"></script>
+    <script src="~/js/db.js?v1.4"></script>
+    <script src="~/js/gphome.js?v2.6"></script>
+    <script src="~/js/mr.js?v1.7"></script>
+    <script src="~/js/moment.js"></script>
+    <script src="~/js/pdfmake.js"></script>
+    <script src="~/js/vfs_fonts.js"></script>
+    <script src="~/js/pdflib.js?v1.1.9"></script>
+    <script src="~/js/modalpopup.js"></script>
+    <script src="~/js/Formtemplates/form6.js"></script>
+    <script src="~/js/Formtemplates/form8.js"></script>
+    <script src="~/js/Formtemplates/form8plus.js"></script>
+    <script src="~/js/Formtemplates/form9.js"></script>
+    <script src="~/js/Formtemplates/coverpage.js"></script>
+    <script src="~/js/Formtemplates/workorder.js"></script>
+    <script src="~/js/Formtemplates/completion.js"></script>
+    <script src="~/js/Formtemplates/checklist.js"></script>
+    <script src="~/js/Formtemplates/MusterRollMovement.js"></script>
+    <script src="~/js/Formtemplates/generategeotag.js"></script>
+    <script src="~/js/Formtemplates/wagelist.js"></script>
+    <script src="~/js/Formtemplates/fto.js"></script>
+    <script src="~/js/cmpStatement.js"></script>
+
+    @* GP config data-island: type="application/json" is NOT executed by the browser,
+       it is a read-only data carrier. gphome.js reads it via JSON.parse on DOMContentLoaded.
+       JsonSerializer handles all escaping (apostrophes, Unicode, etc.) — no manual Replace needed. *@
+    <script type="application/json" id="gp-home-config">
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+            gpCode               = panchayatCode,
+            userEmail            = userEmail,
+            userName             = userName,
+            gpName               = gpName,
+            gpNameRegional       = gpNameRegional,
+            districtName         = districtName,
+            districtCode         = districtCode,
+            districtNameRegional = districtNameRegional,
+            blockName            = blockName,
+            blockCode            = blockCode,
+            blockNameRegional    = blockNameRegional,
+            vidhanSabha          = vidhanSabha,
+            lokSabha             = lokSabha
+        }))
+        </script>
+}

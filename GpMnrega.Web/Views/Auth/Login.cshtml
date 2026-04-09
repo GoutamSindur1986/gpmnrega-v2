@@ -1,0 +1,699 @@
+@{
+    Layout = null;
+    var userType = ViewBag.UserType as string ?? "GP";
+    var ads = ViewBag.Ads as List<GpMnrega.DataLayer.Models.ProductAd> ?? new();
+    var error = ViewBag.Error as string;
+    var returnUrl = ViewBag.ReturnUrl as string ?? "";
+    var agencyList = new[]
+    {
+        "Agriculture","Border Roads Organisation (BRO)","Fisheries & A.R. Deptt.",
+        "Social Forest","HORTICULTURE","Labhuk Samiti","NRLM-CLF","PWD",
+        "R.D.Deptt.","Self Help Group (SHG)/Village Organisation",
+        "SERICULTURE","TERRITORIAL Forest","W.R Deptt.","Work Deptt.",
+        "Water Dept (Agriculture).","R.D.Deptt (RWS)"
+    };
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GP MNREGA — Login</title>
+<meta name="description" content="Gram Panchayat NREGA reporting portal. Login to generate work reports, NMR, cashbooks and registers."/>
+<link rel="icon" href="/favicon.ico"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+<style>
+:root{--brand:#3730a3;--brand-light:#4f46e5;--brand-dark:#1e1b6e;--accent:#f59e0b;--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Poppins',sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh;background:#f0f4ff}
+
+/* ─── Page wrapper: left + right side by side ─── */
+.page-wrap{
+  display:flex;
+  flex:1;
+  min-height:100vh;
+}
+
+/* ─── LEFT PANEL ─── */
+.left-panel{
+  width:50%;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  overflow-y:auto;
+  box-shadow:4px 0 32px rgba(55,48,163,.08);
+  position:relative;
+  z-index:2;
+}
+.left-inner{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:32px 40px;
+  max-width:480px;
+  margin:0 auto;
+  width:100%;
+}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel{
+  width:50%;
+  background:linear-gradient(145deg,#1e1b6e 0%,#3730a3 45%,#4f46e5 100%);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow-y:auto;
+  overflow-x:hidden;
+  color:#fff;
+}
+/* subtle dot pattern */
+.right-panel::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+
+/* Right panel top half — slogan + bullets + contact */
+.right-top{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:48px 48px 32px;
+  position:relative;
+  z-index:1;
+}
+.right-top h1{
+  font-size:clamp(1.8rem,2.8vw,2.6rem);
+  font-weight:800;
+  line-height:1.2;
+  margin-bottom:16px;
+}
+.right-top .tagline{
+  font-size:.93rem;
+  opacity:.8;
+  margin-bottom:28px;
+  line-height:1.6;
+}
+.feature-list{
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.feature-list li{
+  display:flex;align-items:flex-start;gap:12px;
+  font-size:.9rem;font-weight:500;
+}
+.feature-list .chk{
+  width:24px;height:24px;
+  background:#22c55e;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:.75rem;margin-top:1px;
+}
+
+/* Right panel bottom half — product ads */
+.right-bottom{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:28px 48px 32px;
+  position:relative;
+  z-index:1;
+}
+.right-bottom-title{
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;opacity:.55;margin-bottom:16px;
+}
+
+/* Ad cards */
+.ad-track{position:relative;flex:1}
+.ad-card{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:18px 22px;
+  display:none;
+}
+.ad-card.active{display:block}
+@@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ad-card.active{animation:fadeUp .4s ease}
+.ad-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.68rem;font-weight:700;letter-spacing:.06em;
+  padding:3px 10px;border-radius:20px;margin-bottom:10px;
+}
+.badge-warning{background:#fef3c7;color:#92400e}
+.badge-success{background:#d1fae5;color:#065f46}
+.badge-info{background:#dbeafe;color:#1e40af}
+.badge-primary{background:#ede9fe;color:#4c1d95}
+.ad-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.ad-icon-wrap{
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.ad-title{font-size:.95rem;font-weight:700}
+.ad-desc{font-size:.8rem;opacity:.8;line-height:1.5;margin-bottom:12px}
+.ad-cta{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  color:#fff;border-radius:8px;padding:6px 16px;
+  font-size:.8rem;font-weight:600;text-decoration:none;transition:all .2s;cursor:pointer;
+}
+.ad-cta:hover{background:rgba(255,255,255,.3);color:#fff}
+.carousel-dots{display:flex;gap:6px;margin-top:14px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);border:none;padding:0;cursor:pointer;transition:all .25s}
+.dot.active{background:#fff;width:20px;border-radius:4px}
+
+/* ─── LEFT PANEL ELEMENTS ─── */
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo-mark{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-light));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:1.1rem;
+}
+.logo-text{font-size:1.15rem;font-weight:700;color:var(--brand-dark);letter-spacing:-.01em}
+
+/* User type tabs (Panchayat / Agency) */
+.user-tabs{
+  display:flex;gap:0;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:24px;
+}
+.utab{
+  flex:1;padding:9px 8px;border:none;border-radius:7px;background:transparent;
+  font-size:.85rem;font-weight:500;color:#64748b;cursor:pointer;transition:all .18s;
+  font-family:'Poppins',sans-serif;
+}
+.utab.active{
+  background:#fff;color:var(--brand);font-weight:600;
+  box-shadow:0 1px 6px rgba(0,0,0,.09);
+}
+
+/* Page title */
+.form-title{font-size:1.5rem;font-weight:700;color:var(--brand-dark);margin-bottom:4px}
+.form-sub{font-size:.83rem;color:#64748b;margin-bottom:22px}
+
+/* Input fields */
+.iw{position:relative;margin-bottom:14px}
+.iw i.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.9rem;pointer-events:none}
+.iw input,.iw select{
+  width:100%;padding:11px 13px 11px 38px;
+  border:1.5px solid #e2e8f0;border-radius:var(--radius);
+  font-size:.88rem;font-family:'Poppins',sans-serif;
+  background:#f8faff;outline:none;transition:all .18s;
+  appearance:none;-webkit-appearance:none;
+}
+.iw input:focus,.iw select:focus{
+  border-color:var(--brand-light);background:#fff;
+  box-shadow:0 0 0 3px rgba(79,70,229,.1);
+}
+.iw .pw-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#94a3b8;cursor:pointer;font-size:.95rem;padding:2px;
+}
+.ferr{font-size:.76rem;color:#ef4444;margin-top:-8px;margin-bottom:8px;display:none}
+.ferr.show{display:block}
+
+/* Forgot link */
+.forgot{text-align:right;font-size:.8rem;color:var(--brand-light);text-decoration:none;display:block;margin-bottom:14px}
+.forgot:hover{text-decoration:underline}
+
+/* Primary button */
+.btn-primary-full{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-light));
+  color:#fff;border:none;border-radius:var(--radius);
+  font-size:.93rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:filter .18s,transform .1s;
+  font-family:'Poppins',sans-serif;
+  margin-top:2px;
+}
+.btn-primary-full:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-primary-full:disabled{background:#94a3b8;cursor:not-allowed;transform:none;filter:none}
+.btn-primary-full .sp{display:none;width:16px;height:16px;border-width:2px}
+
+/* Switch link */
+.switch-link{text-align:center;margin-top:16px;font-size:.83rem;color:#64748b}
+.switch-link a{color:var(--brand-light);font-weight:600;text-decoration:none}
+
+/* Alert */
+.msg-box{padding:11px 14px;border-radius:10px;font-size:.83rem;display:flex;align-items:flex-start;gap:8px;margin-bottom:14px}
+.msg-err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+.msg-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+
+/* GP/Block lookup result */
+.lookup-res{font-size:.78rem;padding:5px 10px;border-radius:6px;margin-top:-8px;margin-bottom:8px}
+.lookup-res.found{color:#059669;background:#f0fdf4}
+.lookup-res.error{color:#dc2626;background:#fef2f2}
+
+/* Left panel footer */
+.left-footer{
+  padding:20px 40px 16px;
+  display:flex;flex-wrap:wrap;gap:12px;
+  font-size:.75rem;color:#94a3b8;
+  border-top:1px solid #f1f5f9;
+  background:#fff;
+}
+.left-footer a{color:#94a3b8;text-decoration:none}
+.left-footer a:hover{color:var(--brand)}
+
+/* ─── MOBILE FEATURE STRIP (shown below form on mobile) ─── */
+.mobile-features{
+  display:none;
+  background:linear-gradient(135deg,var(--brand-dark),var(--brand));
+  color:#fff;padding:24px 20px;
+}
+.mobile-features ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.mobile-features li{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:500}
+.mobile-features .chk{width:22px;height:22px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0}
+.mobile-support{font-size:.8rem;opacity:.75;margin-top:16px;text-align:center}
+.mobile-support a{color:rgba(255,255,255,.85);text-decoration:none}
+
+/* ─── RESPONSIVE ─── */
+@@media(max-width:900px){
+  .page-wrap{flex-direction:column}
+  .left-panel{width:100%;min-height:auto}
+  .left-inner{max-width:100%;padding:24px 20px}
+  .right-panel{display:none}
+  .mobile-features{display:block}
+  .left-footer{padding:16px 20px}
+}
+@@media(max-width:480px){
+  .form-title{font-size:1.3rem}
+  .user-tabs{margin-bottom:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ══════════════ LEFT PANEL ══════════════ -->
+  <div class="left-panel">
+    <div class="left-inner">
+
+      <!-- Logo -->
+      <div class="logo">
+        <div class="logo-mark"><i class="bi bi-flower1"></i></div>
+        <span class="logo-text">GP MNREGA</span>
+      </div>
+
+      <!-- GP / Agency type switch -->
+      <div class="user-tabs" role="tablist">
+        <button class="utab @(userType=="GP"?"active":"")" onclick="switchType('GP')" role="tab">
+          <i class="bi bi-building me-1"></i>Panchayat Login
+        </button>
+        <button class="utab @(userType=="Dept"?"active":"")" onclick="switchType('Dept')" role="tab">
+          <i class="bi bi-briefcase me-1"></i>Agency Login
+        </button>
+      </div>
+
+      <!-- Global message -->
+      @if (!string.IsNullOrEmpty(error))
+      {
+        <div class="msg-box msg-err"><i class="bi bi-exclamation-circle-fill"></i><span>@error</span></div>
+      }
+      <div id="globalMsg"></div>
+
+      <!-- ── LOGIN FORM ── -->
+      <div id="loginSection">
+        <div class="form-title">Welcome back!</div>
+        <div class="form-sub" id="loginSub">Sign in to your Panchayat account</div>
+
+        <form id="loginForm" novalidate>
+          @Html.AntiForgeryToken()
+          <input type="hidden" id="loginUserType" value="@userType"/>
+          <input type="hidden" name="returnUrl" value="@returnUrl"/>
+
+          <div class="iw">
+            <i class="bi bi-envelope ic"></i>
+            <input type="email" id="loginEmail" name="email" placeholder="Email address" autocomplete="email" required/>
+          </div>
+          <div id="loginEmailErr" class="ferr"></div>
+
+          <div class="iw">
+            <i class="bi bi-lock ic"></i>
+            <input type="password" id="loginPassword" name="password" placeholder="Password" autocomplete="current-password" required/>
+            <button type="button" class="pw-eye" onclick="togglePw('loginPassword',this)"><i class="bi bi-eye-slash"></i></button>
+          </div>
+          <div id="loginPasswordErr" class="ferr"></div>
+
+          <a href="/passwordreset" class="forgot">Forgot password?</a>
+
+          <button type="submit" class="btn-primary-full" id="loginBtn">
+            <span>Login</span>
+            <div class="spinner-border sp" role="status" id="loginSpinner"></div>
+          </button>
+        </form>
+
+        <div class="switch-link">
+          Don't have an account? <a href="#" onclick="showRegister();return false;">Sign up now</a>
+        </div>
+      </div>
+
+      <!-- ── REGISTER FORM ── -->
+      <div id="registerSection" style="display:none">
+        <div class="form-title">Create account</div>
+        <div class="form-sub" id="registerSub">Register your Panchayat</div>
+
+        <form id="registerForm" novalidate>
+          @Html.AntiForgeryToken()
+          <input type="hidden" id="registerUserType" value="@userType"/>
+
+          <div class="iw"><i class="bi bi-person ic"></i>
+            <input type="text" id="regName" name="UserName" placeholder="Full name *" maxlength="50"/>
+          </div>
+          <div id="regNameErr" class="ferr"></div>
+
+          <div class="iw"><i class="bi bi-envelope ic"></i>
+            <input type="email" id="regEmail" name="Email" placeholder="Email address *" autocomplete="email"/>
+          </div>
+          <div id="regEmailErr" class="ferr"></div>
+
+          <div class="iw"><i class="bi bi-lock ic"></i>
+            <input type="password" id="regPassword" name="Password" placeholder="Password (6–15 chars) *"/>
+            <button type="button" class="pw-eye" onclick="togglePw('regPassword',this)"><i class="bi bi-eye-slash"></i></button>
+          </div>
+          <div id="regPasswordErr" class="ferr"></div>
+
+          <div class="iw"><i class="bi bi-phone ic"></i>
+            <input type="tel" id="regPhone" name="Phone" placeholder="Mobile number (10 digits) *" maxlength="10"/>
+          </div>
+          <div id="regPhoneErr" class="ferr"></div>
+
+          <!-- GP fields -->
+          <div id="gpFields">
+            <div class="iw"><i class="bi bi-building ic"></i>
+              <input type="text" id="regPanchayatCode" name="PanchayatCode" placeholder="Panchayat Code *" onblur="lookupGP(this.value)"/>
+            </div>
+            <div id="regPanchayatErr" class="ferr"></div>
+            <div id="gpResult" class="lookup-res" style="display:none"></div>
+
+            <div class="iw"><i class="bi bi-geo-alt ic"></i>
+              <input type="text" id="regLokSabha" name="LokSabha" placeholder="Lok Sabha constituency *"/>
+            </div>
+            <div id="regLokSabhaErr" class="ferr"></div>
+
+            <div class="iw"><i class="bi bi-geo-alt ic"></i>
+              <input type="text" id="regVidhanSabha" name="VidhanSabha" placeholder="Vidhan Sabha constituency *"/>
+            </div>
+            <div id="regVidhanSabhaErr" class="ferr"></div>
+          </div>
+
+          <!-- Agency fields -->
+          <div id="deptFields" style="display:none">
+            <div class="iw"><i class="bi bi-building ic"></i>
+              <select id="regAgency" name="Agency">
+                <option value="">Select Line Department *</option>
+                @foreach (var a in agencyList)
+                {
+                  <option value="@a">@a</option>
+                }
+              </select>
+            </div>
+            <div id="regAgencyErr" class="ferr"></div>
+
+            <div class="iw"><i class="bi bi-hash ic"></i>
+              <input type="text" id="regBlockCode" name="BlockCode" placeholder="Block Code *" onblur="lookupBlock(this.value)"/>
+            </div>
+            <div id="regBlockErr" class="ferr"></div>
+            <div id="blockResult" class="lookup-res" style="display:none"></div>
+          </div>
+
+          <!-- Terms -->
+          <div style="margin:10px 0 14px;font-size:.8rem;color:#64748b">
+            <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer">
+              <input type="checkbox" id="chkTerms" style="margin-top:3px;accent-color:var(--brand)"/>
+              <span>I agree to the <a href="/termsandconditions" target="_blank" style="color:var(--brand-light)">Terms &amp; Conditions</a> and <a href="/privacypolicy" target="_blank" style="color:var(--brand-light)">Privacy Policy</a></span>
+            </label>
+            <div id="regTermsErr" class="ferr"></div>
+          </div>
+
+          <button type="submit" class="btn-primary-full" id="registerBtn">
+            <span>Create Account</span>
+            <div class="spinner-border sp" role="status" id="registerSpinner"></div>
+          </button>
+        </form>
+
+        <div class="switch-link">
+          Already have an account? <a href="#" onclick="showLogin();return false;">Sign in</a>
+        </div>
+      </div>
+
+    </div><!-- /left-inner -->
+
+    <!-- Left footer -->
+    <div class="left-footer">
+      <a href="/privacypolicy">Privacy Policy</a>
+      <a href="/termsandconditions">Terms &amp; Conditions</a>
+      <a href="/contact">Contact</a>
+      <span style="margin-left:auto">&copy; @DateTime.Now.Year S3KN Software Solutions Pvt. Ltd.</span>
+    </div>
+  </div><!-- /left-panel -->
+
+  <!-- ══════════════ RIGHT PANEL ══════════════ -->
+  <div class="right-panel">
+
+    <!-- Top half: slogan + 3 bullets -->
+    <div class="right-top">
+      <h1>Gram Panchayat<br/>Reporting made easy</h1>
+      <p class="tagline">Streamline NREGA work management and payments for your Gram Panchayat.</p>
+      <ul class="feature-list">
+        <li>
+          <span class="chk"><i class="bi bi-check-lg"></i></span>
+          <span>Manage NREGA projects <strong>effortlessly</strong></span>
+        </li>
+        <li>
+          <span class="chk"><i class="bi bi-check-lg"></i></span>
+          <span>Monitor payments and progress in <strong>real-time</strong></span>
+        </li>
+        <li>
+          <span class="chk"><i class="bi bi-check-lg"></i></span>
+          <span>Secure &amp; user-friendly <strong>government portal</strong></span>
+        </li>
+      </ul>
+
+      <!-- Contact / Support info — below feature list -->
+      <div class="right-contact" style="margin-top:24px;display:flex;flex-wrap:wrap;gap:16px;font-size:.84rem;opacity:.8;justify-content:center">
+        <span><i class="bi bi-telephone-fill me-1"></i>Support: <strong>+91-84455-88990</strong></span>
+        <span><i class="bi bi-envelope-fill me-1"></i><a href="mailto:admin@gpmnrega.com" style="color:rgba(255,255,255,.85);text-decoration:none">admin@@gpmnrega.com</a></span>
+      </div>
+    </div>
+
+    <!-- Bottom half: product ads rotation -->
+    <div class="right-bottom">
+      <div class="right-bottom-title">From S3KN Software Solutions</div>
+
+      <div class="ad-track" id="adCarousel">
+        @for (int i = 0; i < ads.Count; i++)
+        {
+          var ad = ads[i];
+          var badgeCss = ad.BadgeColor switch { "warning"=>"badge-warning","success"=>"badge-success","info"=>"badge-info",_=>"badge-primary" };
+          <div class="ad-card @(i==0?"active":"")" data-index="@i">
+            <span class="ad-badge @badgeCss">
+              <i class="bi bi-lightning-fill"></i> @ad.BadgeText
+            </span>
+            <div class="ad-row">
+              <div class="ad-icon-wrap"><i class="bi @ad.IconClass"></i></div>
+              <div class="ad-title">@ad.Title</div>
+            </div>
+            <p class="ad-desc">@ad.ShortDesc</p>
+            @if (!string.IsNullOrEmpty(ad.CtaText))
+            {
+              <a href="@ad.CtaUrl" class="ad-cta">@ad.CtaText <i class="bi bi-arrow-right"></i></a>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="carousel-dots" id="carouselDots">
+        @for (int i = 0; i < ads.Count; i++)
+        {
+          <button class="dot @(i==0?"active":"")" onclick="goToSlide(@i)" aria-label="Slide @(i+1)"></button>
+        }
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+
+</div><!-- /page-wrap -->
+
+<!-- ── Mobile feature strip (shown below form on small screens) ── -->
+<div class="mobile-features">
+  <ul>
+    <li><span class="chk"><i class="bi bi-check-lg"></i></span> Manage NREGA projects <strong>effortlessly</strong></li>
+    <li><span class="chk"><i class="bi bi-check-lg"></i></span> Monitor payments and progress in <strong>real-time</strong></li>
+    <li><span class="chk"><i class="bi bi-check-lg"></i></span> Secure &amp; user-friendly <strong>government portal</strong></li>
+  </ul>
+  <div class="mobile-support">
+    <i class="bi bi-telephone-fill me-1"></i>+91-84455-88990 &nbsp;|&nbsp;
+    <a href="mailto:admin@gpmnrega.com">admin@@gpmnrega.com</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var currentType = '@userType';
+
+// ── Type switch (GP / Agency) ──────────────────────────────────────
+function switchType(t) {
+  currentType = t;
+  document.getElementById('loginUserType').value = t;
+  document.getElementById('registerUserType').value = t;
+  // Highlight correct tab — find by index (0=GP, 1=Dept)
+  var tabs = document.querySelectorAll('.utab');
+  tabs.forEach(b => b.classList.remove('active'));
+  tabs[t === 'GP' ? 0 : 1].classList.add('active');
+  var isGP = t === 'GP';
+  document.getElementById('loginSub').textContent = isGP ? 'Sign in to your Panchayat account' : 'Sign in to your Agency account';
+  document.getElementById('registerSub').textContent = isGP ? 'Register your Panchayat' : 'Register your Agency';
+  document.getElementById('gpFields').style.display = isGP ? '' : 'none';
+  document.getElementById('deptFields').style.display = isGP ? 'none' : '';
+}
+
+function showLogin()   { document.getElementById('loginSection').style.display=''; document.getElementById('registerSection').style.display='none'; }
+function showRegister(){ document.getElementById('loginSection').style.display='none'; document.getElementById('registerSection').style.display=''; }
+
+function togglePw(id, btn) {
+  var inp = document.getElementById(id);
+  var icon = btn.querySelector('i');
+  if (inp.type === 'password') { inp.type='text'; icon.className='bi bi-eye'; }
+  else { inp.type='password'; icon.className='bi bi-eye-slash'; }
+}
+
+// ── Validation helpers ─────────────────────────────────────────────
+function showErr(id, msg) { var e=document.getElementById(id); e.textContent=msg; e.classList.add('show'); }
+function clearErrs() { document.querySelectorAll('.ferr').forEach(e=>{ e.textContent=''; e.classList.remove('show'); }); }
+function showGlobal(msg, isErr) {
+  var el = document.getElementById('globalMsg');
+  el.innerHTML = '<div class="msg-box '+(isErr?'msg-err':'msg-ok')+'"><i class="bi bi-'+(isErr?'exclamation-circle':'check-circle')+'-fill"></i><span>'+msg+'</span></div>';
+  el.scrollIntoView({behavior:'smooth'});
+}
+function setLoading(btnId, spId, on) {
+  document.getElementById(btnId).disabled=on;
+  document.getElementById(spId).style.display=on?'inline-block':'none';
+}
+
+// ── GP/Block code lookup ───────────────────────────────────────────
+function lookupGP(code) {
+  if (!code || code.length < 8) return;
+  var el=document.getElementById('gpResult'); el.style.display=''; el.className='lookup-res'; el.textContent='Looking up…';
+  fetch('/pullgpcodes?pull=panchayat&code='+encodeURIComponent(code))
+    .then(r=>r.text()).then(html=>{
+      var doc=new DOMParser().parseFromString(html,'text/html');
+      var labels=doc.querySelectorAll('label');
+      if (labels.length && labels[0].innerText && labels[0].innerText!=='Error') {
+        el.className='lookup-res found'; el.textContent='✓ '+labels[0].innerText;
+      } else { el.className='lookup-res error'; el.textContent='✗ Panchayat not found'; showErr('regPanchayatErr','Invalid Panchayat Code'); }
+    }).catch(()=>{ el.style.display='none'; });
+}
+function lookupBlock(code) {
+  if (!code || code.length < 5) return;
+  var el=document.getElementById('blockResult'); el.style.display=''; el.className='lookup-res'; el.textContent='Looking up…';
+  fetch('/pullgpcodes?pull=block&code='+encodeURIComponent(code))
+    .then(r=>r.text()).then(html=>{
+      var doc=new DOMParser().parseFromString(html,'text/html');
+      var labels=doc.querySelectorAll('label');
+      if (labels.length && labels[0].innerText && labels[0].innerText!=='Error') {
+        el.className='lookup-res found'; el.textContent='✓ Block: '+labels[0].innerText;
+      } else { el.className='lookup-res error'; el.textContent='✗ Block code not found'; showErr('regBlockErr','Invalid Block Code'); }
+    }).catch(()=>{ el.style.display='none'; });
+}
+
+// ── Login submit ───────────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault(); clearErrs();
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPassword').value;
+  var type=document.getElementById('loginUserType').value;
+  var valid=true;
+  var re=/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+  if(!email||!re.test(email)){showErr('loginEmailErr','Enter a valid email address');valid=false;}
+  if(!pass||pass.length<6){showErr('loginPasswordErr','Password must be at least 6 characters');valid=false;}
+  if(!valid) return;
+  setLoading('loginBtn','loginSpinner',true);
+  var url=type==='GP'?'/login':'/deptlogin';
+  var fd=new FormData();
+  fd.append('email',email); fd.append('password',pass);
+  fd.append('returnUrl',this.querySelector('[name=returnUrl]').value);
+  fd.append('__RequestVerificationToken',document.querySelector('[name=__RequestVerificationToken]').value);
+  try {
+    var resp=await fetch(url,{method:'POST',body:fd,redirect:'manual'});
+    if(resp.type==='opaqueredirect'||resp.redirected||resp.status===302){
+      window.location.href=resp.url||(type==='GP'?'/Auth/Home':'/AuthAgency/DeptHome');
+    } else { showGlobal('Invalid email or password. Please try again.',true); }
+  } catch { showGlobal('Network error. Please try again.',true); }
+  finally { setLoading('loginBtn','loginSpinner',false); }
+});
+
+// ── Register submit ────────────────────────────────────────────────
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  e.preventDefault(); clearErrs();
+  var type=document.getElementById('registerUserType').value;
+  var isGP=type==='GP'; var valid=true;
+  var name=document.getElementById('regName').value.trim();
+  var email=document.getElementById('regEmail').value.trim();
+  var pass=document.getElementById('regPassword').value;
+  var phone=document.getElementById('regPhone').value.trim();
+  if(!name||name.length<3||name.length>50){showErr('regNameErr','Name must be 3–50 characters');valid=false;}
+  var re2=/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+  if(!email||!re2.test(email)){showErr('regEmailErr','Enter a valid email address');valid=false;}
+  if(!pass||pass.length<6||pass.length>15||pass.includes(' ')){showErr('regPasswordErr','6–15 characters, no spaces');valid=false;}
+  if(!/^\d{10}$/.test(phone)){showErr('regPhoneErr','Enter 10-digit mobile number');valid=false;}
+  if(isGP){
+    var pc=document.getElementById('regPanchayatCode').value.trim();
+    var ls=document.getElementById('regLokSabha').value.trim();
+    var vs=document.getElementById('regVidhanSabha').value.trim();
+    if(pc.length<8){showErr('regPanchayatErr','Enter valid Panchayat Code');valid=false;}
+    if(ls.length<2){showErr('regLokSabhaErr','Enter Lok Sabha name');valid=false;}
+    if(vs.length<2){showErr('regVidhanSabhaErr','Enter Vidhan Sabha name');valid=false;}
+  } else {
+    var agency=document.getElementById('regAgency').value;
+    var bc=document.getElementById('regBlockCode').value.trim();
+    if(!agency){showErr('regAgencyErr','Select an agency');valid=false;}
+    if(bc.length<5){showErr('regBlockErr','Enter valid Block Code');valid=false;}
+  }
+  if(!document.getElementById('chkTerms').checked){showErr('regTermsErr','You must agree to Terms & Conditions');valid=false;}
+  if(!valid) return;
+  setLoading('registerBtn','registerSpinner',true);
+  var url=isGP?'/api/auth/register-gp':'/api/auth/register-dept';
+  var fd=new FormData(this);
+  try {
+    var resp=await fetch(url,{method:'POST',body:fd});
+    var data=await resp.json();
+    if(resp.ok){ showGlobal(data.message,false); showLogin(); }
+    else { showGlobal(data.error||'Registration failed.',true); }
+  } catch { showGlobal('Network error. Please try again.',true); }
+  finally { setLoading('registerBtn','registerSpinner',false); }
+});
+
+// ── Ad carousel ────────────────────────────────────────────────────
+var cur=0, total=@ads.Count, timer;
+function goToSlide(n){
+  if(total===0) return;
+  document.querySelectorAll('.ad-card')[cur].classList.remove('active');
+  document.querySelectorAll('.dot')[cur].classList.remove('active');
+  cur=(n+total)%total;
+  document.querySelectorAll('.ad-card')[cur].classList.add('active');
+  document.querySelectorAll('.dot')[cur].classList.add('active');
+}
+function nextSlide(){ goToSlide(cur+1); }
+if(total>1){
+  timer=setInterval(nextSlide,4500);
+  document.getElementById('adCarousel').addEventListener('mouseenter',()=>clearInterval(timer));
+  document.getElementById('adCarousel').addEventListener('mouseleave',()=>{ timer=setInterval(nextSlide,4500); });
+}
+
+// Init
+switchType(currentType);
+</script>
+</body>
+</html>

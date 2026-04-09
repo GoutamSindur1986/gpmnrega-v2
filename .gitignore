@@ -1,0 +1,43 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!**/packages/build/
+
+# ASP.NET
+appsettings.Production.json
+appsettings.Secrets.json
+
+# Published output
+publish/
+**/publish/
+
+# Node / npm
+node_modules/
+
+# Rider/JetBrains
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Wasm intermediate
+*.wasm.gz

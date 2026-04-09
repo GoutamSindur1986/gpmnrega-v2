@@ -1,0 +1,731 @@
+@*
+ ╔══════════════════════════════════════════════════════════════╗
+ ║  BRAND CONFIGURATION — update ONLY this block when rebranding ║
+ ║  e.g. GP MNREGA  →  G RAM G                                  ║
+ ║  Images live in /wwwroot/brand/ — swap files there too.      ║
+ ╚══════════════════════════════════════════════════════════════╝
+*@
+@{
+    // ── Brand config — single place to edit when rebranding ─────
+    var Brand_AppName      = "GP MNREGA";
+    var Brand_LogoPng      = "/brand/logo.png";
+    var Brand_FaviconIco   = "/brand/favicon.ico";
+    var Brand_ShowLogo     = true;   // false = show icon glyph instead of image
+    // ─────────────────────────────────────────────────────────────
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewData["Title"] — @Brand_AppName</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="@Brand_FaviconIco" />
+    <!-- Existing jQuery scripts (unchanged) -->
+    <script src="~/js/jquery-3.4.1.min.js"></script>
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        :root {
+            --brand: #3730a3;
+            --brand-light: #4f46e5;
+            --brand-dark: #1e1b6e;
+            --accent: #f59e0b;
+            --nav-h: 60px;
+        }
+
+        body {
+            font-family: 'Poppins',sans-serif;
+            background: #f0f4ff;
+            padding-top: var(--nav-h);
+        }
+
+        /* ── Navbar ─────────────────────────────────────── */
+        .gp-navbar {
+            height: var(--nav-h);
+            background: var(--brand-dark);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 20px rgba(30,27,110,.3);
+        }
+
+            .gp-navbar .logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+                color: #fff;
+                font-weight: 700;
+                font-size: 1.05rem;
+                letter-spacing: -.01em;
+                flex-shrink: 0;
+            }
+
+            .gp-navbar .logo-mark {
+                width: 34px;
+                height: 34px;
+                background: linear-gradient(135deg,#4f46e5,#818cf8);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .9rem;
+            }
+
+        .gp-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 28px;
+            flex: 1;
+        }
+
+            .gp-nav-links a {
+                color: rgba(255,255,255,.75);
+                font-size: .83rem;
+                font-weight: 500;
+                padding: 6px 12px;
+                border-radius: 7px;
+                text-decoration: none;
+                transition: all .15s;
+                white-space: nowrap;
+            }
+
+                .gp-nav-links a:hover,
+                .gp-nav-links a.active {
+                    color: #fff;
+                    background: rgba(255,255,255,.12);
+                }
+
+        .gp-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,.8);
+            font-size: .82rem;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--brand-light),#818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.2);
+            color: rgba(255,255,255,.8);
+            font-size: .8rem;
+            padding: 5px 14px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all .15s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .btn-logout:hover {
+                background: rgba(255,255,255,.2);
+                color: #fff
+            }
+
+        /* Mobile hamburger */
+        .navbar-toggler-custom {
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.2);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: none;
+        }
+
+        @@media(max-width:992px) {
+            .gp-nav-links {
+                display: none
+            }
+
+            .navbar-toggler-custom {
+                display: flex;
+                align-items: center
+            }
+        }
+
+        /* ── Offcanvas mobile nav ──────────────────────── */
+        .offcanvas-nav .offcanvas-header {
+            background: var(--brand-dark);
+            color: #fff;
+            padding: 16px 20px;
+        }
+
+        .offcanvas-nav .offcanvas-title {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .offcanvas-nav .btn-close {
+            filter: invert(1) grayscale(1) brightness(2)
+        }
+
+        .offcanvas-nav .offcanvas-body {
+            padding: 16px 0
+        }
+
+        .offcanvas-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #374151;
+            font-size: .9rem;
+            text-decoration: none;
+            transition: all .15s;
+            border-radius: 0;
+        }
+
+            .offcanvas-nav a:hover {
+                background: #f0f4ff;
+                color: var(--brand)
+            }
+
+            .offcanvas-nav a i {
+                font-size: 1rem;
+                width: 20px;
+                text-align: center;
+                color: #6b7280
+            }
+
+            .offcanvas-nav a:hover i {
+                color: var(--brand)
+            }
+
+        .offcanvas-nav .nav-divider {
+            border-top: 1px solid #f1f5f9;
+            margin: 8px 0;
+        }
+
+        .offcanvas-nav .user-info {
+            padding: 16px 20px;
+            background: #f8faff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+            .offcanvas-nav .user-info .avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: linear-gradient(135deg,var(--brand-light),#818cf8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .9rem;
+                font-weight: 700;
+                color: #fff;
+                flex-shrink: 0;
+            }
+
+            .offcanvas-nav .user-info .name {
+                font-weight: 600;
+                font-size: .88rem;
+                color: #1e1b6e
+            }
+
+            .offcanvas-nav .user-info .email {
+                font-size: .76rem;
+                color: #94a3b8
+            }
+
+        /* ── Main content ──────────────────────────────── */
+        .main-content {
+            min-height: calc(100vh - var(--nav-h));
+            padding: 24px 0 48px;
+        }
+
+        /* ── Loading bar (slim top bar — does NOT block UI) ─── */
+        .gp-loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            height: 3px;
+            background: transparent;
+            pointer-events: none;
+        }
+
+            .gp-loading.show {
+                display: block;
+            }
+
+        .gp-loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg,var(--brand-dark),var(--brand),var(--brand-light));
+            border-radius: 0 3px 3px 0;
+            animation: gp-bar-anim 1.6s ease-in-out infinite;
+            transform-origin: left center;
+        }
+
+        @@keyframes gp-bar-anim {
+            0% {
+                width: 0%;
+                opacity: 1
+            }
+
+            60% {
+                width: 85%;
+                opacity: 1
+            }
+
+            90% {
+                width: 95%;
+                opacity: .8
+            }
+
+            100% {
+                width: 95%;
+                opacity: .8
+            }
+        }
+        /* Small label under the navbar so user knows what's loading */
+        .gp-loading-label {
+            position: fixed;
+            top: 4px;
+            right: 16px;
+            z-index: 9999;
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--brand);
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            white-space: nowrap;
+        }
+
+        .gp-loading.show + .gp-loading-label {
+            opacity: 1
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ── Center-fixed progress overlay (determinate) ─── */
+        .gp-progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15,15,30,.45);
+            backdrop-filter: blur(3px);
+        }
+
+            .gp-progress-overlay.show {
+                display: flex
+            }
+
+        .gp-progress-box {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.22);
+            padding: 30px 40px;
+            min-width: 300px;
+            max-width: 400px;
+            width: 86%;
+            text-align: center;
+        }
+
+        .gp-progress-label {
+            font-size: .88rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            min-height: 1.3em;
+        }
+
+        .gp-progress-track {
+            background: #e2e8f0;
+            border-radius: 99px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .gp-progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg,#1e1b6e 0%,#4f46e5 100%);
+            transition: width .45s cubic-bezier(.4,0,.2,1);
+            width: 0%;
+        }
+
+        .gp-progress-pct {
+            margin-top: 10px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #6366f1;
+        }
+
+        /* ── Toast notifications (replaces alert boxes) ── */
+        .gp-toast-container {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+            .gp-toast-container > * {
+                pointer-events: auto
+            }
+
+        .gp-toast {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.12);
+            padding: 14px 18px;
+            min-width: 280px;
+            max-width: 380px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: toastIn .3s ease;
+            border-left: 4px solid var(--brand);
+        }
+
+            .gp-toast.success {
+                border-left-color: #10b981
+            }
+
+            .gp-toast.error {
+                border-left-color: #ef4444
+            }
+
+            .gp-toast.warning {
+                border-left-color: #f59e0b
+            }
+
+            .gp-toast .toast-icon {
+                font-size: 1.1rem;
+                flex-shrink: 0;
+                margin-top: 1px
+            }
+
+            .gp-toast.success .toast-icon {
+                color: #10b981
+            }
+
+            .gp-toast.error .toast-icon {
+                color: #ef4444
+            }
+
+            .gp-toast.warning .toast-icon {
+                color: #f59e0b
+            }
+
+            .gp-toast .toast-msg {
+                font-size: .85rem;
+                color: #374151;
+                flex: 1
+            }
+
+            .gp-toast .toast-close {
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #94a3b8;
+                padding: 0;
+                font-size: 1rem;
+                flex-shrink: 0;
+            }
+
+        @@keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ── Cards ─────────────────────────────────────── */
+        .gp-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        .gp-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-weight: 600;
+            font-size: .95rem;
+            color: #1e1b6e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── Page header ───────────────────────────────── */
+        .page-header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-size: 1.35rem;
+                font-weight: 700;
+                color: #1e1b6e;
+                margin: 0;
+            }
+
+            .page-header .breadcrumb {
+                font-size: .8rem;
+                margin: 4px 0 0;
+            }
+    </style>
+</head>
+<body>
+
+    <!-- ── Navbar ──────────────────────────────────────────────────── -->
+    @{
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+        var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? userEmail;
+        var userType = User.FindFirst("UserType")?.Value ?? "GP";
+        var avatarLabel = userType == "Dept" ? "LD" : "GP";
+        var isGP = userType == "GP";
+    }
+
+    <nav class="gp-navbar" role="navigation" aria-label="Main navigation">
+
+        <!-- Logo — controlled by brand config block at top of this file -->
+        <a class="logo" href="@(isGP ? "/Auth/Home" : "/AuthAgency/DeptHome")">
+            @if (Brand_ShowLogo)
+            {
+                <img src="@Brand_LogoPng" alt="@Brand_AppName" style="height:40px;" />
+            }
+            else
+            {
+                <div class="logo-mark"><i class="bi bi-flower1"></i></div>
+            }
+            @Brand_AppName
+        </a>
+
+        <!-- Desktop nav links -->
+        <div class="gp-nav-links">
+            @if (isAuthenticated)
+            {
+                @if (isGP)
+                {
+                    <a href="/Auth/Home"
+                       class="@(Context.Request.Path.StartsWithSegments("/Auth/Home") ? "active" : "")">
+                        <i class="bi bi-house-fill"></i> Panchayat Home
+                    </a>
+                    <a href="/Auth/Cashbook"
+                       class="@(Context.Request.Path.StartsWithSegments("/Auth/Cashbook") ? "active" : "")">
+                        <i class="bi bi-journal-text"></i> Cashbooks & Registers
+                    </a>
+                    <a href="/Auth/Subscription">
+                        <i class="bi bi-star"></i> Subscription
+                    </a>
+                }
+                else
+                {
+                    <a href="/AuthAgency/DeptHome"
+                       class="@(Context.Request.Path.StartsWithSegments("/AuthAgency") ? "active" : "")">
+                        <i class="bi bi-building"></i> Agency Home
+                    </a>
+                    <a href="/AuthAgency/PaySubDept">
+                        <i class="bi bi-star"></i> Subscription
+                    </a>
+                }
+            }
+            <a href="/about">
+                <i class="bi bi-info-circle"></i> About Us
+            </a>
+            <a href="/contact">
+                <i class="bi bi-telephone"></i> Contact Us
+            </a>
+            <a href="/offers">
+                <i class="bi bi-tag"></i> Offers
+            </a>
+            <a href="/help">
+                <i class="bi bi-question-circle"></i> Help
+            </a>
+        </div>
+
+        <!-- Right side: user + logout (only when authenticated) -->
+        <div class="gp-nav-right">
+            @if (isAuthenticated)
+            {
+                <div class="user-pill d-none d-lg-flex">
+                    <div class="user-avatar">@avatarLabel</div>
+                    <span class="d-none d-xl-inline">@userName</span>
+                </div>
+                <form action="/logout" method="post" style="margin:0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline">Logout</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a href="/login" class="btn-logout" style="text-decoration:none">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span class="d-none d-sm-inline">Login</span>
+                </a>
+            }
+
+            <!-- Mobile hamburger -->
+            <button class="navbar-toggler-custom" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
+                    aria-controls="mobileNav" aria-label="Open menu">
+                <i class="bi bi-list" style="font-size:1.3rem"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ── Offcanvas Mobile Nav ──────────────────────────────────────── -->
+    <div class="offcanvas offcanvas-start offcanvas-nav" tabindex="-1"
+         id="mobileNav" aria-labelledby="mobileNavLabel">
+        <div class="offcanvas-header">
+            <span class="offcanvas-title" id="mobileNavLabel">
+                <i class="bi bi-flower1"></i> GP MNREGA
+            </span>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            @if (isAuthenticated)
+            {
+                <div class="user-info">
+                    <div class="avatar">@avatarLabel</div>
+                    <div>
+                        <div class="name">@userName</div>
+                        <div class="email">@userEmail</div>
+                    </div>
+                </div>
+                <div class="nav-divider"></div>
+                @if (isGP)
+                {
+                    <a href="/Auth/Home"><i class="bi bi-house-fill"></i> Panchayat Home</a>
+                    <a href="/Auth/Cashbook"><i class="bi bi-journal-text"></i> Cashbooks &amp; Registers</a>
+                    <a href="/Auth/Subscription"><i class="bi bi-star"></i> Subscription</a>
+                }
+                else
+                {
+                    <a href="/AuthAgency/DeptHome"><i class="bi bi-building"></i> Agency Home</a>
+                    <a href="/AuthAgency/PaySubDept"><i class="bi bi-star"></i> Subscription</a>
+                }
+                <div class="nav-divider"></div>
+            }
+            <a href="/about"><i class="bi bi-info-circle"></i> About Us</a>
+            <a href="/contact"><i class="bi bi-telephone"></i> Contact Us</a>
+            <a href="/offers"><i class="bi bi-tag"></i> Offers</a>
+            <a href="/help"><i class="bi bi-question-circle"></i> Help</a>
+            @if (isAuthenticated)
+            {
+                <div class="nav-divider"></div>
+                <form action="/logout" method="post" style="margin:0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" style="width:100%;text-align:left;background:none;border:none;
+                            padding:12px 20px;font-size:.9rem;color:#ef4444;cursor:pointer;
+                            display:flex;align-items:center;gap:12px;">
+                        <i class="bi bi-box-arrow-right" style="width:20px;text-align:center"></i> Logout
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- ── Slim loading bar (top of viewport, non-blocking) ──────────── -->
+    <div class="gp-loading" id="gpLoading">
+        <div class="gp-loading-bar"></div>
+    </div>
+    <div class="gp-loading-label" id="gpLoadingLabel">Loading…</div>
+
+    <!-- ── Toast container ────────────────────────────────────────────── -->
+    <div class="gp-toast-container" id="gpToastContainer"></div>
+
+    <!-- ── Center progress overlay (used by gphome.js gpShowProgress) ── -->
+    <div class="gp-progress-overlay" id="gpProgressOverlay">
+        <div class="gp-progress-box">
+            <div class="gp-progress-label" id="gpProgressLabel">Please wait…</div>
+            <div class="gp-progress-track">
+                <div class="gp-progress-fill" id="gpProgressFill"></div>
+            </div>
+            <div class="gp-progress-pct" id="gpProgressPct">0%</div>
+        </div>
+    </div>
+
+    <!-- ── Page body ──────────────────────────────────────────────────── -->
+    <div class="main-content">
+        @RenderBody()
+    </div>
+
+    <!-- ── Scripts ────────────────────────────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- GP UI utilities (gpShowLoading, gpToast, etc.) are defined inside gphome.js -->
+    <script src="~/js/gphome.js?v2.6"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

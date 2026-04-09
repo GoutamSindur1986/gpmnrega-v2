@@ -1,0 +1,7 @@
+[
+  {"adId":1,"title":"WebChat Automation","shortDesc":"Automate your WhatsApp, Web and SMS customer conversations with AI-powered smart replies.","ctaText":"Notify Me","ctaUrl":"#notify","iconClass":"bi-chat-dots-fill","badgeText":"Coming Soon","badgeColor":"warning","isActive":true,"sortOrder":1},
+  {"adId":2,"title":"Instagram Automation","shortDesc":"Schedule posts, auto-reply to DMs, and grow your Instagram presence hands-free.","ctaText":"Join Waitlist","ctaUrl":"#notify","iconClass":"bi-instagram","badgeText":"Coming Soon","badgeColor":"warning","isActive":true,"sortOrder":2},
+  {"adId":3,"title":"Facebook Automation","shortDesc":"Manage pages, auto-respond to comments and messages, track engagement at scale.","ctaText":"Join Waitlist","ctaUrl":"#notify","iconClass":"bi-facebook","badgeText":"Coming Soon","badgeColor":"warning","isActive":true,"sortOrder":3},
+  {"adId":4,"title":"GP MNREGA Pro","shortDesc":"Upgrade to Pro — unlimited report generation, priority support, and no watermarks.","ctaText":"View Plans","ctaUrl":"/Auth/PaySub","iconClass":"bi-star-fill","badgeText":"Upgrade","badgeColor":"success","isActive":true,"sortOrder":4},
+  {"adId":5,"title":"Advertise Here","shortDesc":"Reach 1500+ Gram Panchayat officials daily. Contact us to place your ad on this platform.","ctaText":"Contact Us","ctaUrl":"/contact","iconClass":"bi-megaphone-fill","badgeText":"Sponsor","badgeColor":"info","isActive":true,"sortOrder":5}
+]

@@ -1,0 +1,206 @@
+@page "/AuthAgency/PaySubDept"
+@model GpMnrega.Web.Pages.AuthAgency.PaySubDeptModel
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Agency Subscription";
+}
+
+<style>
+.sub-wrap{max-width:720px;margin:0 auto;padding:24px 0}
+.sub-hero{background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border-radius:16px;padding:32px;margin-bottom:24px}
+.sub-hero h4{font-weight:700;margin-bottom:4px;font-size:1.2rem}
+.sub-hero p{opacity:.8;font-size:.88rem;margin:0}
+.info-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:20px}
+.info-card table{width:100%;border-collapse:collapse;font-size:.88rem}
+.info-card td{padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#374151}
+.info-card td:first-child{font-weight:600;color:#64748b;width:200px;background:#f8faff}
+.info-card tr:last-child td{border-bottom:none}
+.plan-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;transition:all .15s;cursor:pointer}
+.plan-card:hover,.plan-card.selected{border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.08)}
+.plan-card.selected{background:#f0f4ff}
+.plan-name{font-weight:700;color:#0f172a;font-size:.95rem}
+.plan-price{font-size:1.4rem;font-weight:800;color:#1e3a5f}
+.plan-price span{font-size:.8rem;font-weight:400;color:#64748b}
+.plan-badge{font-size:.72rem;font-weight:600;padding:2px 10px;border-radius:20px}
+.btn-pay{width:100%;padding:13px;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:12px;font-size:.97rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:filter .15s;margin-top:8px}
+.btn-pay:hover{filter:brightness(1.15)}
+.btn-pay:disabled{background:#94a3b8;cursor:not-allowed;filter:none}
+.status-active{color:#059669;font-weight:700}
+.status-inactive{color:#dc2626;font-weight:700}
+.renew-alert{background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:.84rem;color:#92400e;margin-bottom:16px;display:flex;gap:8px;align-items:center}
+.receipt-btn{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:#1e3a5f;font-weight:600;text-decoration:none;padding:4px 12px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff}
+</style>
+
+<div class="container py-4">
+  <div class="sub-wrap">
+
+    <div class="sub-hero">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-building-fill" style="font-size:2rem;color:#60a5fa"></i>
+        <div>
+          <h4>Agency / Line Department Subscription</h4>
+          <p>Manage your Block-level agency subscription — view details, renew, or upgrade your plan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingState" class="text-center py-5">
+      <div class="spinner-border" style="width:2rem;height:2rem;color:#1e3a5f"></div>
+      <p style="color:#64748b;font-size:.88rem;margin-top:12px">Loading your subscription details…</p>
+    </div>
+
+    <div id="subContent" style="display:none">
+
+      <div id="renewAlert" class="renew-alert" style="display:none">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Your subscription is ending soon. Renew now to avoid interruption.</span>
+      </div>
+
+      <div class="info-card">
+        <table>
+          <tr><td>Block / Taluk Name</td><td id="tdBlock">—</td></tr>
+          <tr><td>Block Code</td><td id="tdCode">—</td></tr>
+          <tr><td>Line Department</td><td id="tdDept">—</td></tr>
+          <tr><td>Email Address</td><td id="tdEmail">—</td></tr>
+          <tr><td>Start Date</td><td id="tdStart">—</td></tr>
+          <tr><td>End Date</td><td id="tdEnd">—</td></tr>
+          <tr>
+            <td>Subscription Status</td>
+            <td>
+              <span id="tdStatus">—</span>
+              <a href="javascript:downloadReceipt()" id="receiptBtn" class="receipt-btn ms-2" style="display:none"><i class="bi bi-receipt"></i> Download Receipt</a>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div id="plansSection" style="display:none">
+        <h5 style="font-weight:700;color:#0f172a;margin-bottom:16px"><i class="bi bi-lightning-fill me-2" style="color:#f59e0b"></i>Choose a Plan</h5>
+
+        <div class="plan-card selected" onclick="selectPlan(this,'monthly',99)" id="plan-monthly">
+          <div>
+            <div class="plan-name">Monthly Plan</div>
+            <div style="font-size:.78rem;color:#64748b">Full access, billed monthly</div>
+          </div>
+          <div class="text-end">
+            <div class="plan-price">₹99 <span>/ month</span></div>
+          </div>
+        </div>
+
+        <div class="plan-card" onclick="selectPlan(this,'yearly',799)" id="plan-yearly">
+          <div>
+            <div class="plan-name">Yearly Plan <span class="plan-badge" style="background:#d1fae5;color:#065f46">Save 33%</span></div>
+            <div style="font-size:.78rem;color:#64748b">Full access for a full year</div>
+          </div>
+          <div class="text-end">
+            <div class="plan-price">₹799 <span>/ year</span></div>
+          </div>
+        </div>
+
+        <div class="plan-card" onclick="selectPlan(this,'3year',1999)" id="plan-3year">
+          <div>
+            <div class="plan-name">3-Year Plan <span class="plan-badge" style="background:#ede9fe;color:#4c1d95">Best Value</span></div>
+            <div style="font-size:.78rem;color:#64748b">Maximum savings, 3 years coverage</div>
+          </div>
+          <div class="text-end">
+            <div class="plan-price">₹1,999 <span>/ 3 years</span></div>
+          </div>
+        </div>
+
+        <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
+          <i class="bi bi-shield-lock-fill"></i> Pay Securely — ₹<span id="payAmount">99</span>
+        </button>
+
+        <p style="font-size:.78rem;color:#94a3b8;text-align:center;margin-top:10px">
+          <i class="bi bi-lock-fill me-1"></i>Secure UPI payment · No refunds once activated · <a href="/termsandconditions" style="color:#64748b">Terms apply</a>
+        </p>
+      </div>
+
+    </div>
+
+    <div id="errorState" style="display:none" class="text-center py-5">
+      <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:#ef4444;display:block;margin-bottom:12px"></i>
+      <p style="color:#64748b">Failed to load subscription details. Please <a href="/AuthAgency/PaySubDept">refresh</a> or <a href="/contact">contact us</a>.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var selectedPlan = 'monthly';
+var selectedAmount = 99;
+
+function selectPlan(el, plan, amount) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPlan = plan;
+  selectedAmount = amount;
+  document.getElementById('payAmount').textContent = amount.toLocaleString('en-IN');
+}
+
+async function loadSubscription() {
+  try {
+    var resp = await fetch('/api/auth/status');
+    if (!resp.ok) throw new Error('Not authenticated');
+    var data = await resp.json();
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('subContent').style.display = 'block';
+
+    document.getElementById('tdBlock').textContent = data.talukName   || data.panchayatName || '—';
+    document.getElementById('tdCode').textContent  = data.talukCode   || data.panchayatCode || '—';
+    document.getElementById('tdDept').textContent  = data.lineDeptName || '—';
+    document.getElementById('tdEmail').textContent = data.email        || '—';
+    document.getElementById('tdStart').textContent = data.startDate    || '—';
+    document.getElementById('tdEnd').textContent   = data.endDate      || '—';
+
+    var statusEl = document.getElementById('tdStatus');
+    if (data.isActive) {
+      statusEl.innerHTML = '<span class="status-active">&#10003; Active</span>';
+      document.getElementById('receiptBtn').style.display = 'inline-flex';
+    } else {
+      statusEl.innerHTML = '<span class="status-inactive">&#10060; Inactive</span>';
+      document.getElementById('plansSection').style.display = 'block';
+    }
+
+    if (data.expiringSoon) {
+      document.getElementById('renewAlert').style.display = 'flex';
+      document.getElementById('plansSection').style.display = 'block';
+    }
+  } catch (e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+  }
+}
+
+async function initiatePayment() {
+  var btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Initiating payment…';
+  try {
+    var resp = await fetch('/api/payment/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: selectedPlan, amount: selectedAmount, userType: 'Agency' })
+    });
+    var data = await resp.json();
+    if (data.paymentUrl) {
+      window.location.href = data.paymentUrl;
+    } else {
+      alert(data.error || 'Payment initiation failed. Please try again or contact support.');
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-shield-lock-fill"></i> Pay Securely — ₹<span id="payAmount">' + selectedAmount + '</span>';
+  }
+}
+
+function downloadReceipt() {
+  if (typeof generateReceipt === 'function') generateReceipt();
+  else alert('Receipt generation requires the pdfmake scripts to be loaded.');
+}
+
+loadSubscription();
+</script>

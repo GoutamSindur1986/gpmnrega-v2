@@ -1,0 +1,239 @@
+@page "/AuthAgency/DeptHome"
+@model GpMnrega.Web.Pages.AuthAgency.DeptHomeModel
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Agency Home";
+    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+    var blockCode = User.FindFirst("BlockCode")?.Value ?? "";
+    var agency = User.FindFirst("Agency")?.Value ?? "";
+    var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "";
+}
+
+@section Styles {
+<style>
+.fy-bar{
+  background:#fff;border-bottom:1px solid #e2e8f0;
+  padding:12px 0;margin-bottom:0;
+  position:sticky;top:60px;z-index:100;
+}
+.agency-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#ede9fe;color:#4c1d95;
+  padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;
+}
+.nmr-item{
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+  padding:14px 0;border-bottom:1px solid #f1f5f9;
+}
+.nmr-item:last-child{border-bottom:none}
+.nmr-meta{display:flex;align-items:center;gap:10px;min-width:200px;
+  font-weight:600;color:#1e1b6e;font-size:.88rem}
+.nmr-actions{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.nmr-btn{
+  padding:5px 14px;border-radius:7px;font-size:.78rem;font-weight:600;
+  border:1.5px solid var(--brand);color:var(--brand);background:#fff;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.nmr-btn:hover{background:var(--brand);color:#fff}
+.wo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.wo-item{font-size:.82rem}
+.wo-label{opacity:.7;margin-bottom:2px}
+.wo-value{font-weight:600;font-size:.9rem}
+.skeleton{
+  background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+  background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:6px;
+}
+@@keyframes shimmer{0%{background-position:100% 50%}100%{background-position:0% 50%}}
+</style>
+}
+
+<!-- Financial Year Bar -->
+<div class="fy-bar">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      @if (!string.IsNullOrEmpty(agency))
+      {
+        <span class="agency-pill"><i class="bi bi-building"></i> @agency</span>
+      }
+      <label style="font-size:.88rem;font-weight:500;color:#374151;white-space:nowrap">
+        <i class="bi bi-calendar3 me-1"></i> Financial Year:
+      </label>
+      <select id="ddlyear" class="form-select form-select-sm" style="max-width:140px">
+        <option value="2026-2027">2026-2027</option>
+        <option value="2025-2026" selected>2025-2026</option>
+        <option value="2024-2025">2024-2025</option>
+        <option value="2023-2024">2023-2024</option>
+      </select>
+      <div class="input-group" style="max-width:380px">
+        <span class="input-group-text bg-white border-end-0" style="border:1.5px solid #e2e8f0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" id="txtSearchWork" class="form-control border-start-0"
+               placeholder="Enter Block Code or Work Code…"
+               style="border:1.5px solid #e2e8f0;border-left:none"
+               onkeydown="if(event.key==='Enter') searchAgencyWork()"/>
+        <button class="btn btn-primary btn-sm px-3" onclick="searchAgencyWork()">
+          Search
+        </button>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" onclick="loadAllAgencyWorks()">
+        <i class="bi bi-grid me-1"></i>All Works
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid px-4 mt-3">
+  <div class="row g-3">
+
+    <!-- Main column -->
+    <div class="col-12 col-lg-8">
+
+      <!-- Work overview -->
+      <div class="gp-card mb-3" id="workOverviewCard" style="display:none">
+        <div class="gp-card-header" style="background:linear-gradient(135deg,#1e1b6e,#3730a3);color:#fff;border-radius:12px 12px 0 0">
+          <i class="bi bi-clipboard-data me-2"></i>Agency Work Overview
+        </div>
+        <div class="p-4">
+          <div class="wo-grid" id="woGrid"></div>
+        </div>
+
+        <!-- NMR list -->
+        <div style="border-top:1px solid #f1f5f9;padding:0 20px 16px">
+          <ul class="list-unstyled mb-0" id="ulNmrList">
+            <li class="text-center py-4 text-muted">
+              <i class="bi bi-search d-block mb-2" style="font-size:2rem;opacity:.3"></i>
+              Search to load NMR records
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="gp-card p-5 text-center" id="emptyState">
+        <i class="bi bi-building" style="font-size:3rem;color:#c7d2fe;display:block;margin-bottom:16px"></i>
+        <h5 style="color:#1e1b6e;margin-bottom:8px">Agency Work Search</h5>
+        <p style="color:#94a3b8;font-size:.9rem;margin:0">
+          Enter a Block Code or Work Code and click Search to load agency works.
+        </p>
+      </div>
+    </div>
+
+    <!-- Stats sidebar -->
+    <div class="col-12 col-lg-4">
+      <div class="gp-card p-3" id="sidebarSkeleton">
+        <div class="skeleton mb-3" style="height:16px;width:60%"></div>
+        <div class="skeleton mb-2" style="height:12px"></div>
+        <div class="skeleton mb-2" style="height:12px"></div>
+        <div class="skeleton" style="height:12px;width:75%"></div>
+      </div>
+
+      <div class="gp-card p-3 mt-3" id="statsCard" style="display:none">
+        <div style="font-size:.78rem;font-weight:600;color:#64748b;text-transform:uppercase;
+                    letter-spacing:.05em;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-bar-chart-fill" style="color:var(--brand)"></i> Agency Stats
+        </div>
+        <div id="agencyStats"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WASM mount -->
+<div id="wasm-root" style="display:none"></div>
+
+@section Scripts {
+<script src="~/js/pdfmake.js"></script>
+<script src="~/js/vfs_fonts.js"></script>
+<script src="~/js/moment.js"></script>
+<script src="~/js/pdflib.js?v1.1.9"></script>
+<script src="~/js/mragency.js?v2.4"></script>
+<script src="~/js/agencyhome.js?v2.0"></script>
+<script src="~/js/AgencyTemplate/form6.js"></script>
+<script src="~/js/AgencyTemplate/form6agency.js"></script>
+<script src="~/js/AgencyTemplate/form8.js"></script>
+<script src="~/js/AgencyTemplate/form8plus.js"></script>
+<script src="~/js/AgencyTemplate/form9.js"></script>
+<script src="~/js/AgencyTemplate/checklist.js"></script>
+<script src="~/js/AgencyTemplate/cmpStatement.js"></script>
+<script src="~/js/AgencyTemplate/agencycompletion.js"></script>
+<script src="~/js/Formtemplates/MusterRollMovement.js"></script>
+<script src="~/js/Formtemplates/generategeotag.js"></script>
+<script src="~/js/modalpopup.js"></script>
+<script src="~/js/wasm-bridge.js"></script>
+<script src="~/js/chatbot.js"></script>
+
+<script>
+var BLOCK_CODE = '@blockCode';
+var AGENCY = '@agency';
+var USER_EMAIL = '@userEmail';
+var _API = '/api/proxy/';
+
+function searchAgencyWork() {
+  var code = document.getElementById('txtSearchWork').value.trim();
+  var year = document.getElementById('ddlyear').value;
+  if (!code) { gpToast('Enter a Block Code or Work Code', 'warning'); return; }
+  gpShowLoading('Searching…');
+
+  $.ajax({
+    url: _API + 'getagencyworkdata',
+    type: 'GET',
+    data: { block_code: code, fin_year: year, agency: AGENCY },
+    success: function(data) {
+      gpHideLoading();
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('workOverviewCard').style.display = '';
+      document.getElementById('sidebarSkeleton').style.display = 'none';
+      document.getElementById('statsCard').style.display = '';
+      populateOverview(data);
+    },
+    error: function(xhr) {
+      gpHideLoading();
+      gpToast(xhr.responseJSON?.error || 'Failed to load work data', 'error');
+    }
+  });
+}
+
+function loadAllAgencyWorks() {
+  if (!BLOCK_CODE) { gpToast('Block code not found. Please re-login.', 'error'); return; }
+  document.getElementById('txtSearchWork').value = BLOCK_CODE;
+  searchAgencyWork();
+}
+
+function populateOverview(data) {
+  var woGrid = document.getElementById('woGrid');
+  woGrid.innerHTML = [
+    ['Agency', data.agency || AGENCY],
+    ['Block Code', data.blockCode || BLOCK_CODE],
+    ['Financial Year', data.finYear || ''],
+    ['Total Works', data.totalWorks || '—'],
+    ['Active Works', data.activeWorks || '—'],
+    ['Status', data.status || '—']
+  ].map(([l,v]) =>
+    '<div class="wo-item"><div class="wo-label">' + l + '</div>' +
+    '<div class="wo-value">' + v + '</div></div>'
+  ).join('');
+
+  // Stats
+  var stats = document.getElementById('agencyStats');
+  stats.innerHTML = [
+    {icon:'bi-check-circle', color:'#10b981', label:'Approved', val: data.approved || 0},
+    {icon:'bi-arrow-repeat', color:'#f59e0b', label:'Ongoing', val: data.ongoing || 0},
+    {icon:'bi-trophy', color:'#6366f1', label:'Completed', val: data.completed || 0}
+  ].map(r =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;' +
+    'border-bottom:1px solid #f8faff;font-size:.85rem">' +
+    '<span style="color:#374151;display:flex;align-items:center;gap:8px">' +
+    '<i class="bi ' + r.icon + '" style="color:' + r.color + '"></i>' + r.label + '</span>' +
+    '<span style="font-weight:700;color:#1e1b6e">' + r.val.toLocaleString() + '</span></div>'
+  ).join('');
+
+  // Build NMR list using existing agencyhome.js
+  if (typeof buildAgencyNmrList === 'function' && data.nmrList) {
+    buildAgencyNmrList(data.nmrList, '#ulNmrList');
+  }
+}
+</script>
+}

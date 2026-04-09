@@ -1,0 +1,154 @@
+@page "/contact"
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Contact Us";
+    var sent = HttpContext.Request.Query.ContainsKey("sent");
+}
+
+<style>
+.page-hero{background:linear-gradient(135deg,#1e1b6e,#3730a3);color:#fff;padding:48px 0 36px;margin:-24px -15px 0}
+.page-hero h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:800;margin-bottom:8px}
+.contact-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:28px}
+.inp-wrap{position:relative;margin-bottom:14px}
+.inp-wrap i.ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.88rem;pointer-events:none}
+.inp-wrap input,.inp-wrap select,.inp-wrap textarea{width:100%;padding:10px 12px 10px 36px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.87rem;font-family:inherit;background:#f8faff;outline:none;transition:border-color .15s}
+.inp-wrap textarea{padding-top:10px;min-height:110px;resize:vertical}
+.inp-wrap input:focus,.inp-wrap select:focus,.inp-wrap textarea:focus{border-color:#4f46e5;background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+.btn-send{width:100%;padding:12px;background:linear-gradient(135deg,#3730a3,#4f46e5);color:#fff;border:none;border-radius:10px;font-size:.93rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:filter .15s}
+.btn-send:hover{filter:brightness(1.08)}
+.info-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.info-item:last-child{border-bottom:none}
+.info-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.info-label{font-size:.73rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.info-val{font-size:.88rem;font-weight:500;color:#1e1b6e}
+.info-sub{font-size:.77rem;color:#64748b;margin-top:1px}
+.gdpr-note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:.79rem;color:#15803d;margin-top:14px;display:flex;gap:8px;align-items:flex-start}
+</style>
+
+<div class="page-hero text-center">
+  <div class="container">
+    <h1><i class="bi bi-chat-text-fill me-2"></i>Get in Touch</h1>
+    <p style="opacity:.85;font-size:.93rem">Questions, issues, or partnership enquiries — we respond within 24 hours.</p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4 align-items-start">
+
+    <div class="col-lg-7">
+      <div class="contact-card">
+        @if (sent)
+        {
+          <div class="text-center py-4">
+            <i class="bi bi-check-circle-fill" style="font-size:3rem;color:#10b981;display:block;margin-bottom:14px"></i>
+            <h4 style="font-weight:700;color:#1e1b6e;margin-bottom:8px">Message Received!</h4>
+            <p style="color:#64748b;font-size:.9rem;margin:0">Thank you for reaching out. We will get back to you within 24 hours.</p>
+            <a href="/contact" class="btn mt-3" style="background:#3730a3;color:#fff;border-radius:10px;padding:9px 24px">Send Another</a>
+          </div>
+        }
+        else
+        {
+          <h4 style="font-weight:700;color:#1e1b6e;margin-bottom:4px">Send Us a Message</h4>
+          <p style="font-size:.83rem;color:#94a3b8;margin-bottom:20px">Fields marked <span style="color:#ef4444">*</span> are required</p>
+
+          <form id="contactForm" novalidate>
+            @Html.AntiForgeryToken()
+            <div class="row g-3 mb-1">
+              <div class="col-md-6"><div class="inp-wrap"><i class="bi bi-person ic"></i><input type="text" id="cName" name="name" placeholder="Your name *" required maxlength="100"/></div></div>
+              <div class="col-md-6"><div class="inp-wrap"><i class="bi bi-envelope ic"></i><input type="email" id="cEmail" name="email" placeholder="Email address *" required/></div></div>
+            </div>
+            <div class="row g-3 mb-1">
+              <div class="col-md-6"><div class="inp-wrap"><i class="bi bi-telephone ic"></i><input type="tel" id="cPhone" name="phone" placeholder="Phone number *" required maxlength="15"/></div></div>
+              <div class="col-md-6"><div class="inp-wrap"><i class="bi bi-building ic"></i><input type="text" id="cOrg" name="organisation" placeholder="Panchayat / Organisation"/></div></div>
+            </div>
+            <div class="inp-wrap">
+              <i class="bi bi-tag ic"></i>
+              <select id="cQuery" name="queryType" style="appearance:none;-webkit-appearance:none">
+                <option value="">Select query type *</option>
+                <option>Issue accessing the site</option>
+                <option>Help with report generation</option>
+                <option>Subscription or payment query</option>
+                <option>Data privacy / DPDP Act request</option>
+                <option>IT outsourcing enquiry</option>
+                <option>General query</option>
+              </select>
+            </div>
+            <div class="inp-wrap">
+              <i class="bi bi-chat-left-text ic" style="top:14px;transform:none"></i>
+              <textarea id="cMessage" name="message" placeholder="Describe your query or issue *" required></textarea>
+            </div>
+            <div id="formError" style="display:none;color:#ef4444;font-size:.82rem;margin-bottom:10px"></div>
+            <button type="submit" class="btn-send" id="submitBtn">
+              <i class="bi bi-send"></i> Send Message
+              <span class="spinner-border spinner-border-sm" id="submitSpinner" style="display:none;width:15px;height:15px;border-width:2px"></span>
+            </button>
+          </form>
+
+          <div class="gdpr-note">
+            <i class="bi bi-shield-check-fill" style="flex-shrink:0"></i>
+            <span>Your data is processed under the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>. We use your contact details only to respond to your query and never share them for marketing. <a href="/privacypolicy" style="color:#15803d;font-weight:600">Privacy Policy</a></span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="contact-card mb-3">
+        <h5 style="font-weight:700;color:#1e1b6e;margin-bottom:4px">Contact Information</h5>
+        <p style="font-size:.8rem;color:#94a3b8;margin-bottom:16px">Reach us directly through any of these channels</p>
+        <div class="info-item">
+          <div class="info-icon" style="background:#ede9fe"><i class="bi bi-envelope-fill" style="color:#3730a3"></i></div>
+          <div><div class="info-label">Email</div><div class="info-val"><a href="mailto:admin@gpmnrega.com" style="color:#3730a3;text-decoration:none">admin@@gpmnrega.com</a></div><div class="info-sub">For all queries — reply within 24 hours</div></div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon" style="background:#d1fae5"><i class="bi bi-telephone-fill" style="color:#059669"></i></div>
+          <div><div class="info-label">Phone</div><div class="info-val">+91 84455 88990</div><div class="info-sub">Mon–Sat, 9:00 AM – 6:00 PM IST</div></div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon" style="background:#dbeafe"><i class="bi bi-geo-alt-fill" style="color:#1d4ed8"></i></div>
+          <div><div class="info-label">Registered Office</div><div class="info-val">S3KN Software Solutions Pvt. Ltd.</div><div class="info-sub">SY 953/*/P2 107, Sai Park Ring Road<br/>Vijayapur — 586 109, Karnataka, India</div></div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon" style="background:#fef3c7"><i class="bi bi-clock-fill" style="color:#b45309"></i></div>
+          <div><div class="info-label">Response Time</div><div class="info-val">Within 24 hours</div><div class="info-sub">Data rights requests (DPDP Act): within 30 days</div></div>
+        </div>
+      </div>
+      <div class="contact-card" style="background:linear-gradient(135deg,#f0fdf4,#d1fae5);border-color:#bbf7d0">
+        <div class="d-flex gap-3 align-items-start">
+          <i class="bi bi-shield-fill-check" style="font-size:1.7rem;color:#059669;flex-shrink:0"></i>
+          <div>
+            <h6 style="font-weight:700;color:#1e1b6e;margin-bottom:5px">Data Privacy Requests</h6>
+            <p style="font-size:.81rem;color:#374151;margin-bottom:10px">To exercise rights under the <strong>DPDP Act 2023</strong> — access, correction, erasure — email with subject <strong>"Data Rights Request"</strong>.</p>
+            <a href="mailto:admin@gpmnrega.com?subject=Data Rights Request" class="btn btn-sm" style="background:#059669;color:#fff;border-radius:8px;font-size:.8rem"><i class="bi bi-envelope me-1"></i> Send Data Rights Request</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('contactForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var errEl = document.getElementById('formError');
+  errEl.style.display = 'none';
+  var name = document.getElementById('cName').value.trim();
+  var email = document.getElementById('cEmail').value.trim();
+  var phone = document.getElementById('cPhone').value.trim();
+  var query = document.getElementById('cQuery').value;
+  var message = document.getElementById('cMessage').value.trim();
+  if (!name || !email || !phone || !query || !message) { errEl.textContent = 'Please fill all required fields.'; errEl.style.display = 'block'; return; }
+  var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+  if (!emailRegex.test(email)) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+  var btn = document.getElementById('submitBtn');
+  var sp = document.getElementById('submitSpinner');
+  btn.disabled = true; sp.style.display = 'inline-block';
+  try {
+    var fd = new FormData(this);
+    var resp = await fetch('/api/contact/send', { method: 'POST', body: fd });
+    if (resp.ok) { window.location.href = '/contact?sent=1'; }
+    else { errEl.textContent = 'Failed to send. Please email admin@@gpmnrega.com directly.'; errEl.style.display = 'block'; }
+  } catch { errEl.textContent = 'Network error. Please email admin@@gpmnrega.com directly.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; sp.style.display = 'none'; }
+});
+</script>

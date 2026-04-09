@@ -1,0 +1,387 @@
+@page "/Auth/Cashbook"
+@model GpMnrega.Web.Pages.Auth.CashbookModel
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Cashbooks & Registers";
+}
+
+@section Styles {
+<style>
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;margin-bottom:20px;
+}
+.section-header h2{
+  font-size:1.15rem;font-weight:700;color:#1e1b6e;margin:0;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ── Period selector ──────────────────────────────── */
+.period-bar{
+  background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+  padding:16px 20px;margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.period-bar label{font-size:.85rem;font-weight:500;color:#374151;white-space:nowrap}
+.period-bar select{
+  border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 12px;
+  font-size:.85rem;font-family:'Poppins',sans-serif;background:#f8faff;
+  min-width:120px;
+}
+.period-bar .btn-load{
+  background:var(--brand);color:#fff;border:none;
+  border-radius:8px;padding:8px 20px;font-size:.85rem;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;
+}
+.period-bar .btn-load:hover{background:var(--brand-light)}
+
+/* ── Register grid ────────────────────────────────── */
+.register-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;margin-bottom:24px;
+  align-items:stretch;
+}
+@@media(max-width:1100px){ .register-grid{ grid-template-columns:repeat(2,1fr); } }
+@@media(max-width:576px){  .register-grid{ grid-template-columns:1fr; } }
+
+.register-card{
+  background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+  padding:16px 18px;transition:all .2s;cursor:pointer;
+  display:flex;align-items:center;gap:14px;
+  min-height:82px;
+}
+.register-card:hover{
+  border-color:var(--brand-light);
+  box-shadow:0 4px 20px rgba(79,70,229,.1);transform:translateY(-2px);
+}
+.register-icon{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.register-info{ flex:1;min-width:0; }
+.register-info h4{font-size:.85rem;font-weight:600;color:#1e1b6e;margin:0 0 3px;line-height:1.3}
+.register-info p{font-size:.75rem;color:#94a3b8;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.register-badge{
+  font-size:.68rem;font-weight:600;
+  padding:2px 7px;border-radius:12px;flex-shrink:0;white-space:nowrap;
+}
+
+/* ── Download progress overlay ────────────────────── */
+.download-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.45);z-index:1050;
+}
+.download-overlay.show{display:block}
+.download-progress{
+  display:none;position:fixed;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:1051;
+  background:#fff;border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  padding:36px 52px;text-align:center;min-width:220px;
+}
+.download-progress.show{display:block}
+.progress-ring{
+  width:72px;height:72px;margin:0 auto 18px;
+}
+.progress-ring circle{
+  fill:none;stroke:#e2e8f0;stroke-width:5;
+}
+.progress-ring .ring{
+  stroke:var(--brand);stroke-dasharray:157;
+  stroke-dashoffset:157;transition:stroke-dashoffset .4s ease;
+  transform:rotate(-90deg);transform-origin:center;
+}
+.progress-label{font-size:.95rem;color:#1e293b;font-weight:600;margin-bottom:4px}
+.progress-sub{font-size:.8rem;color:#94a3b8}
+
+/* ── Kannada label ────────────────────────────────── */
+.kannada-note{
+  background:#fef9ee;border:1px solid #fed7aa;border-radius:8px;
+  padding:10px 14px;font-size:.82rem;color:#92400e;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+</style>
+}
+
+<div class="container-fluid px-4 py-3">
+
+  <!-- Kannada info note (from original page) -->
+  <div class="kannada-note">
+    <i class="bi bi-info-circle-fill"></i>
+    <span>
+      <a href="/GPGuidelinefiles/GP_7_Register.pdf" target="_blank"
+         style="color:#92400e;font-weight:600">ಈ ಸುತ್ತೋಲೆಯಂತೆ</a>
+      III & V ರೆಜಿಸ್ಟರ್‌ಗಳನ್ನು ಅಭಿವೃದ್ಧಿಪಡಿಸಲಾಗಿದೆ.
+    </span>
+  </div>
+
+  <!-- Period selector -->
+  <div class="period-bar">
+    <label><i class="bi bi-calendar3 me-1"></i> Financial Year:</label>
+    <select id="ddlyear">
+      <option value="2026-2027">2026-2027</option>
+      <option value="2025-2026" selected>2025-2026</option>
+      <option value="2024-2025">2024-2025</option>
+      <option value="2023-2024">2023-2024</option>
+    </select>
+
+    <label><i class="bi bi-calendar-month me-1"></i> Month:</label>
+    <select id="ddlMonth">
+      <option value="00">Select Month</option>
+      <option value="01">January</option>
+      <option value="02">February</option>
+      <option value="03">March</option>
+      <option value="04">April</option>
+      <option value="05">May</option>
+      <option value="06">June</option>
+      <option value="07">July</option>
+      <option value="08">August</option>
+      <option value="09">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+
+    <label><i class="bi bi-calendar2-range me-1"></i> Quarter:</label>
+    <select id="ddlQtr">
+      <option value="00">Select Quarter</option>
+      <option value="0">Q1 (Apr – Jun)</option>
+      <option value="1">Q2 (Jul – Sep)</option>
+      <option value="2">Q3 (Oct – Dec)</option>
+      <option value="3">Q4 (Jan – Mar)</option>
+    </select>
+
+    <button class="btn-load" onclick="loadCashbook()">
+      <i class="bi bi-arrow-clockwise"></i> Load
+    </button>
+  </div>
+
+  <!-- Download progress overlay — fixed centered, outside page flow -->
+  <div class="download-overlay" id="downloadOverlay"></div>
+  <div class="download-progress" id="downloadProgress">
+    <svg class="progress-ring" viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r="25"/>
+      <circle class="ring" id="progressRing" cx="30" cy="30" r="25"/>
+    </svg>
+    <div class="progress-label" id="progressLabel">Generating PDF…</div>
+    <div class="progress-sub" id="progressSub">Please wait</div>
+  </div>
+
+  <!-- Section: Cashbook -->
+  <div class="section-header">
+    <h2><i class="bi bi-journal-text" style="color:var(--brand)"></i>Cashbook / Registers</h2>
+  </div>
+
+  <div class="register-grid">
+
+    <!-- Button 1: FTO Wage Cash Book (Monthly) — requires month -->
+    <div class="register-card" id="FTOWageCash">
+      <div class="register-icon" style="background:#fce7f3">
+        <i class="bi bi-cash-stack" style="color:#9d174d"></i>
+      </div>
+      <div class="register-info">
+        <h4>FTO Wage Cash Book</h4>
+        <p>Monthly FTO Wage Cash Book</p>
+      </div>
+      <span class="register-badge" style="background:#fce7f3;color:#9d174d">Monthly</span>
+    </div>
+
+    <!-- Button 2: FTO Material Cash Book (Monthly) — requires month -->
+    <div class="register-card" id="FTOMatCash">
+      <div class="register-icon" style="background:#f0fdf4">
+        <i class="bi bi-boxes" style="color:#15803d"></i>
+      </div>
+      <div class="register-info">
+        <h4>FTO Material Cash Book</h4>
+        <p>Monthly FTO Material Cash Book</p>
+      </div>
+      <span class="register-badge" style="background:#f0fdf4;color:#15803d">Monthly</span>
+    </div>
+
+    <!-- Button 3: Register 1B (Quarterly) — requires quarter -->
+    <div class="register-card" id="Register1">
+      <div class="register-icon" style="background:#ede9fe">
+        <i class="bi bi-journal-bookmark-fill" style="color:#7c3aed"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 1B</h4>
+        <p>Employment Register – Part C (Quarterly)</p>
+      </div>
+      <span class="register-badge" style="background:#ede9fe;color:#7c3aed">Quarterly</span>
+    </div>
+
+    <!-- Button 4: Register 3 (Monthly) — requires month -->
+    <div class="register-card" id="Register3">
+      <div class="register-icon" style="background:#dbeafe">
+        <i class="bi bi-file-earmark-text-fill" style="color:#1d4ed8"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 3</h4>
+        <p>Work-wise Expenditure Register (Monthly)</p>
+      </div>
+      <span class="register-badge" style="background:#dbeafe;color:#1d4ed8">Monthly</span>
+    </div>
+
+    <!-- Button 5: Register 4 (Quarterly) — requires quarter -->
+    <div class="register-card" id="Register4">
+      <div class="register-icon" style="background:#fef3c7">
+        <i class="bi bi-file-earmark-spreadsheet-fill" style="color:#b45309"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 4</h4>
+        <p>Work Register (Quarterly)</p>
+      </div>
+      <span class="register-badge" style="background:#fef3c7;color:#b45309">Quarterly</span>
+    </div>
+
+    <!-- Button 6: Register 5 (Yearly) — no period validation -->
+    <div class="register-card" id="Register5">
+      <div class="register-icon" style="background:#d1fae5">
+        <i class="bi bi-file-earmark-ruled-fill" style="color:#047857"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 5</h4>
+        <p>Asset Register (Yearly)</p>
+      </div>
+      <span class="register-badge" style="background:#d1fae5;color:#047857">Yearly</span>
+    </div>
+
+    <!-- Button 7: Register 6 (Yearly) — no period validation -->
+    <div class="register-card" id="Register6">
+      <div class="register-icon" style="background:#e0f2fe">
+        <i class="bi bi-exclamation-circle-fill" style="color:#0369a1"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 6</h4>
+        <p>Complaint Register (Yearly)</p>
+      </div>
+      <span class="register-badge" style="background:#e0f2fe;color:#0369a1">Yearly</span>
+    </div>
+
+    <!-- Button 8: Register 7 (Yearly) — no period validation -->
+    <div class="register-card" id="Register7">
+      <div class="register-icon" style="background:#fff7ed">
+        <i class="bi bi-tools" style="color:#c2410c"></i>
+      </div>
+      <div class="register-info">
+        <h4>Register 7</h4>
+        <p>Material Register (Yearly)</p>
+      </div>
+      <span class="register-badge" style="background:#fff7ed;color:#c2410c">Yearly</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden WASM mount (handles PDF generation with watermark logic) -->
+<div id="wasm-root" style="display:none"></div>
+
+@section Scripts {
+@{
+    @* Read the same auth claims that Home.cshtml injects — needed by common.js loadData() *@
+    var cb_panchayatCode        = User.FindFirst("PanchayatCode")?.Value ?? "";
+    var cb_panchayatName        = User.FindFirst("PanchyatName")?.Value ?? "";
+    var cb_panchayatNameRegional= User.FindFirst("PanchayatNameRegional")?.Value ?? "";
+    var cb_districtName         = User.FindFirst("DistrictName")?.Value ?? "";
+    var cb_districtCode         = User.FindFirst("DistrictCode")?.Value ?? "";
+    var cb_districtNameRegional = User.FindFirst("DistrictNameRegional")?.Value ?? "";
+    var cb_blockName            = User.FindFirst("TalukName")?.Value ?? "";
+    var cb_blockCode            = User.FindFirst("TalukCode")?.Value ?? "";
+    var cb_blockNameRegional    = User.FindFirst("TalukNameRegional")?.Value ?? "";
+    var cb_stateName            = User.FindFirst("StateName")?.Value ?? "KARNATAKA";
+    var cb_stateCode            = User.FindFirst("StateCode")?.Value ?? "15";
+    var cb_stateShortName       = User.FindFirst("short_name")?.Value ?? "";
+    var cb_stateNameRegional    = User.FindFirst("StateNameRegional")?.Value ?? "";
+    var cb_userName             = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "";
+    var cb_vidhanSabha          = User.FindFirst("VidhanSabha")?.Value ?? "";
+    var cb_lokSabha             = User.FindFirst("LokSabha")?.Value ?? "";
+    var cb_isSubscribed         = User.FindFirst("IsSubscribed")?.Value == "true";
+}
+@* GP data island — read by common.js loadData() on DOMContentLoaded *@
+<script type="application/json" id="gp-home-config">
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+        panchayat_code         = cb_panchayatCode,
+        panchayatName          = cb_panchayatName,
+        panchayat_NameRegional = cb_panchayatNameRegional,
+        districtName           = cb_districtName,
+        district_code          = cb_districtCode,
+        districtNameRegional   = cb_districtNameRegional,
+        blockName              = cb_blockName,
+        block_code             = cb_blockCode,
+        blockNameRegional      = cb_blockNameRegional,
+        stateName              = cb_stateName,
+        state_code             = cb_stateCode,
+        state_shortname        = cb_stateShortName,
+        stateNameRegional      = cb_stateNameRegional,
+        userName               = cb_userName,
+        vidhanSabha            = cb_vidhanSabha,
+        lokSabha               = cb_lokSabha,
+        isSubscribed           = cb_isSubscribed
+    }))
+</script>
+
+<script src="~/js/pdfmake.js"></script>
+<script src="~/js/vfs_fonts.js"></script>
+<script src="~/js/db.js?v1.5"></script>
+<script src="~/js/moment.js"></script>
+<script src="~/js/pdflib.js?v1.1.9"></script>
+<script src="~/js/mr.js?v1.4.0"></script>
+<script src="~/js/common.js?v1.3"></script>
+<script src="~/js/cashbook.js?v2.1"></script>
+<script src="~/js/ftowagecash.js?v1.0"></script>
+<script src="~/js/ftomatcash.js?v1.0"></script>
+<script src="~/js/register3_form.js?v1.0"></script>
+<script src="~/js/register5.js?v1.0"></script>
+<script src="~/js/register4.js?v1.0"></script>
+<script src="~/js/register1b.js?v1.0"></script>
+<script src="~/js/register6.js?v1.0"></script>
+<script src="~/js/register7.js?v1.0"></script>
+<script src="~/js/home1.js?v3.0"></script>
+
+<script>
+var _progressTimer = null;
+var _progressPct   = 0;
+
+// Show progress overlay — fixed center popup with animated ring
+function showDownloadProgress(label, sub) {
+  document.getElementById('progressLabel').textContent = label || 'Generating PDF…';
+  document.getElementById('progressSub').textContent   = sub   || 'Please wait';
+  document.getElementById('downloadOverlay').classList.add('show');
+  document.getElementById('downloadProgress').classList.add('show');
+  _progressPct = 0;
+  animateRing(0);
+  if (_progressTimer) clearInterval(_progressTimer);
+  _progressTimer = setInterval(function () {
+    if (_progressPct < 90) {
+      _progressPct += (90 - _progressPct) * 0.03;
+      animateRing(_progressPct);
+    }
+  }, 600);
+}
+
+// Hide progress overlay — snap to 100% then close
+function hideDownloadProgress() {
+  if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
+  animateRing(100);
+  setTimeout(function () {
+    document.getElementById('downloadProgress').classList.remove('show');
+    document.getElementById('downloadOverlay').classList.remove('show');
+    _progressPct = 0;
+  }, 600);
+}
+
+function animateRing(pct) {
+  var ring = document.getElementById('progressRing');
+  if (!ring) return;
+  var circumference = 157; // 2 * π * r  where r=25
+  ring.style.strokeDashoffset = circumference - (circumference * pct / 100);
+}
+
+// Load button — not used for PDF generation, kept for compatibility
+function loadCashbook() {
+  reportData.fincialYear = document.getElementById('ddlyear').value;
+  gpToast('Financial year set to ' + reportData.fincialYear, 'info');
+}
+</script>

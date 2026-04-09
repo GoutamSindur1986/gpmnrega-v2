@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>gpmnrega-web-secrets</UserSecretsId>
+    <ApplicationIcon>gandhi-image.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="gandhi-image.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GpMnrega.DataLayer\GpMnrega.DataLayer.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Dapper" Version="2.1.28" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.3.0" />
+    <!-- Uncomment below to enable UseBlazorFrameworkFiles() for full WASM hosting -->
+    <!-- <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.0" /> -->
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="evohtmltopdf

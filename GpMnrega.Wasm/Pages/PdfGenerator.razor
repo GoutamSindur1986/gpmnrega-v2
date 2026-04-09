@@ -1,0 +1,82 @@
+@* PdfGenerator.razor
+   This component is the bridge between jQuery UI and PDF generation.
+   Subscription check happens HERE in WASM — not visible as plain JavaScript.
+   jQuery calls window.wasmGeneratePdf() which is exposed via JSInvokable.
+*@
+@using GpMnrega.Wasm.Services
+@using Microsoft.JSInterop
+@inject ISubscriptionService Sub
+@inject IJSRuntime JS
+
+@code {
+    private bool _initialised = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialised)
+        {
+            _initialised = true;
+            // Register this component as the global PDF handler
+            // so jQuery can call window.wasmGeneratePdf(config)
+            var dotnetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("registerWasmPdfHandler", dotnetRef);
+        }
+    }
+
+    /// <summary>
+    /// Called from jQuery via: window.wasmGeneratePdf(jsonConfig)
+    /// Checks subscription status, adds watermark if trial, generates PDF.
+    /// This logic runs in WASM — not readable as JS source.
+    /// </summary>
+    [JSInvokable]
+    public async Task GeneratePdfAsync(string configJson)
+    {
+        try
+        {
+            var isSubscribed = await Sub.IsSubscribedAsync();
+
+            // Pass subscription status to the JS pdfmake generator
+            // pdfmake itself stays in JS for compatibility with existing templates
+            // but the DECISION of whether to add watermark is made here in WASM
+            await JS.InvokeVoidAsync("executePdfGeneration", configJson, !isSubscribed);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("onWasmPdfError", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Check subscription status — called by jQuery before showing premium features.
+    /// </summary>
+    [JSInvokable]
+    public async Task<bool> CheckSubscriptionAsync()
+    {
+        return await Sub.IsSubscribedAsync();
+    }
+
+    /// <summary>
+    /// Fetch work data via our proxy — called from WASM interop.
+    /// </summary>
+    [JSInvokable]
+    public async Task<string> FetchWorkDataAsync(string districtCode, string blockCode,
+        string panchayatCode, string finYear)
+    {
+        try
+        {
+            using var http = new System.Net.Http.HttpClient();
+            http.BaseAddress = new Uri(await JS.InvokeAsync<string>("eval",
+                "window.location.origin"));
+
+            var resp = await http.GetAsync(
+                $"/api/proxy/getworkdata?district_code={districtCode}" +
+                $"&block_code={blockCode}&panchayat_code={panchayatCode}&fin_year={finYear}");
+
+            return await resp.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message });
+        }
+    }
+}
