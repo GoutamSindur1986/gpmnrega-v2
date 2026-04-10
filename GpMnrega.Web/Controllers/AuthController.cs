@@ -78,9 +78,10 @@ public class AuthController : Controller
             Expires = DateTimeOffset.UtcNow.AddHours(8)
         });
 
-        if (!result.IsSubscribed)
-            return Redirect("/Auth/PaySub");
-
+        // Trial users (IsSubscribed=false) are allowed into Home — their PDFs
+        // will carry the "TRIAL VERSION" watermark (EvoPDF: ProxyController.ConverterWatermark;
+        // pdfMake: generateNewPdf in gphome.js reads IsSubscribed from page config).
+        // PaySub page is still reachable via nav for them to upgrade.
         return Redirect(returnUrl ?? "/Auth/Home");
     }
 
@@ -135,9 +136,8 @@ public class AuthController : Controller
             Expires = DateTimeOffset.UtcNow.AddHours(8)
         });
 
-        if (!result.IsSubscribed)
-            return Redirect("/AuthAgency/PaySubDept");
-
+        // Same trial policy as GP: non-subscribers go to DeptHome (with watermark),
+        // not hard-blocked at PaySubDept.
         return Redirect(returnUrl ?? "/AuthAgency/DeptHome");
     }
 

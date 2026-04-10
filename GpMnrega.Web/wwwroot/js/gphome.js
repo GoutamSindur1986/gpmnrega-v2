@@ -104,7 +104,8 @@ var reportData = {
     workStatus: '', agencyCode: '', DPRFrozen: '',
     NMRS: [],
     Material: { Materials: [] },
-    AssetLink: ''
+    AssetLink: '',
+    isSubscribed: true   // default true; overwritten from gp-home-config on init
 };
 // ── API base path (updated from *.aspx to clean API routes) ───────
 var _API = '/api/proxy/';
@@ -127,6 +128,10 @@ function initReportData(geo) {
             reportData[f] = geo[f];
             gpData[f] = geo[f];
         }
+    }
+    // isSubscribed is boolean — handle separately so false is not skipped by the if() above
+    if (typeof geo.isSubscribed === 'boolean') {
+        reportData.isSubscribed = geo.isSubscribed;
     }
 }
 // ── LocalStorage helpers ─────────────────────────────────────────
@@ -1723,6 +1728,20 @@ function generateNewPdf(docDefinition, fileName) {
         gpToast('PDF engine not loaded. Please refresh the page.', 'error');
         return;
     }
+
+    // ── Trial watermark (pdfMake-based forms) ─────────────────────────────
+    // For EvoPDF-based forms (WageList, FTO, filledNMR via /api/proxy/converter)
+    // the watermark is added server-side in ProxyController.ConverterWatermark.
+    // For client-side pdfMake forms (CoverPage, BlankNMR, etc.) we add it here.
+    if (!reportData.isSubscribed) {
+        docDefinition.watermark = {
+            text: 'TRIAL VERSION',
+            color: '#888888',
+            opacity: 0.15,
+            bold: true
+        };
+    }
+
     // Use Tunga font registered in vfs_fonts.js (loaded before this script).
     // Mirrors agencyhome.js implementation.
     pdfMake.fonts = {

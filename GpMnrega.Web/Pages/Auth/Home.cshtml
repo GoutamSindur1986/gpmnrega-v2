@@ -19,6 +19,7 @@
     var blockNameRegional = User.FindFirst("TalukNameRegional")?.Value ?? "";
     var vidhanSabha = User.FindFirst("VidhanSabha")?.Value ?? "";
     var lokSabha = User.FindFirst("LokSabha")?.Value ?? "";
+    var isSubscribed = User.FindFirst("IsSubscribed")?.Value == "true";
 }
 
 @section Styles {
@@ -846,7 +847,8 @@
             blockCode            = blockCode,
             blockNameRegional    = blockNameRegional,
             vidhanSabha          = vidhanSabha,
-            lokSabha             = lokSabha
+            lokSabha             = lokSabha,
+            isSubscribed         = isSubscribed
         }))
         </script>
 }
