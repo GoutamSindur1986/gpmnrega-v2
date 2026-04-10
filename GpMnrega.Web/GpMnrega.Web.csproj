@@ -22,6 +22,11 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.5.1" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="evohtmltopdf
+    <Reference Include="evohtmltopdf">
+      <HintPath>E:\Ddrive\SVN_gpmnrega\gpmnrega2\bin\evohtmltopdf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

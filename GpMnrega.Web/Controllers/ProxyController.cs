@@ -1014,16 +1014,22 @@ public class ProxyController : ControllerBase
             // ── EvoPDF setup — mirrors converter.aspx.cs exactly ──────────────
             HtmlToPdfConverter htmlToPdfConverter = new HtmlToPdfConverter();
             htmlToPdfConverter.LicenseKey = "aOb25/T05/Pz8PLn/+n35/T26fb16f7+/v7n9w==";
-           
+
             htmlToPdfConverter.ConversionDelay = 0;
             htmlToPdfConverter.PdfDocumentOptions.LeftMargin  = 5;
             htmlToPdfConverter.PdfDocumentOptions.RightMargin = 5;
             htmlToPdfConverter.PdfDocumentOptions.TopMargin   = 5;
 
-            // Landscape for FTO, WageList, blknmr, filledNmr — mirrors original switch
+            // Landscape for FTO, WageList, blknmr, filledNmr — mirrors original converter.aspx.cs
             bool landscape = page is "FTO" or "WageList" or "blknmr" or "filledNmr";
-            if (landscape)
-                htmlToPdfConverter.PdfDocumentOptions.PdfPageOrientation = EvoPdf.PdfPageOrientation.Portrait;
+            htmlToPdfConverter.PdfDocumentOptions.PdfPageOrientation = landscape
+                ? EvoPdf.PdfPageOrientation.Landscape
+                : EvoPdf.PdfPageOrientation.Portrait;
+
+            // ── Trial watermark — matches original converter.aspx.cs logic ────
+            bool isSubscribed = User.FindFirst("IsSubscribed")?.Value == "true";
+            if (!isSubscribed)
+                htmlToPdfConverter.BeforeRenderPdfPageEvent += ConverterWatermark;
 
             // Base URL so relative image/CSS paths in NIC HTML resolve correctly
             string baseUrl = page is "WageList" or "FTO"
@@ -1801,6 +1807,48 @@ public class GpCodesController : ControllerBase
         catch
         {
             return Content("<html><body><label>Error</label></body></html>", "text/html");
+        }
+    }
+
+    // ── Trial watermark handler — mirrors converter.aspx.cs BeforeRenderPdfPageEvent ──
+    // Stamps each PDF page with a "TRIAL VERSION" text overlay for non-subscribers.
+    private static void ConverterWatermark(BeforeRenderPdfPageParams e)
+    {
+        try
+        {
+            var page   = e.Page;
+            float w    = page.ClientRectangle.Width;
+            float h    = page.ClientRectangle.Height;
+            float x    = w / 3f;
+            float y    = h / 2f;
+
+            var titleFont = page.Document.AddFont(
+                new System.Drawing.Font("Times New Roman", 20, System.Drawing.FontStyle.Bold,
+                                        System.Drawing.GraphicsUnit.Point));
+
+            var linkFont = page.Document.AddFont(
+                new System.Drawing.Font("Times New Roman", 15, System.Drawing.FontStyle.Bold,
+                                        System.Drawing.GraphicsUnit.Point));
+            linkFont.IsUnderline = true;
+
+            // "TRIAL VERSION" title
+            var titleEl = new TextElement(x, y, "This is trial version", titleFont);
+            var res = page.AddElement(titleEl);
+
+            // "BUY NOW" link below title
+            float linkY     = res.EndPageBounds.Bottom + 15;
+            string linkText = "CLICK HERE TO BUY PAID VERSION!";
+            float linkW     = linkFont.GetTextWidth(linkText);
+            var linkEl      = new TextElement(x, linkY, linkText, linkFont);
+            linkEl.ForeColor = System.Drawing.Color.Navy;
+            page.AddElement(linkEl);
+
+            var linkRect = new System.Drawing.RectangleF(x, linkY, linkW, 20);
+            page.AddElement(new LinkUrlElement(linkRect, "https://www.gpmnrega.com/auth/PaySub"));
+        }
+        catch
+        {
+            // watermark failure must never abort the PDF
         }
     }
 }

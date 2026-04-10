@@ -9,9 +9,5 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="evohtmltopdf">
-      <HintPath>E:\Ddrive\SVN_gpmnrega\gpmnrega2\bin\evohtmltopdf.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+
 </Project>
