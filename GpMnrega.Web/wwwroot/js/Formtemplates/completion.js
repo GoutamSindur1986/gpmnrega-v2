@@ -4,7 +4,7 @@ function generatecompletion() {
         var rd = reportData;
 
         // Compute work order no & date (strip trailing /TS if present)
-        var tsNo = rd.techSanctionNo || '';
+        var tsNo = (rd.techSanctionNo || '').split(',')[0].trim();
         var workOrderNo = tsNo.indexOf('/TS') !== -1
             ? tsNo.substring(0, tsNo.length - 3)
             : tsNo;
@@ -74,7 +74,7 @@ function generatecompletion() {
                     stack: [
                         { text: 'ಗೆ,', fontSize: 11 },
                         { text: 'ಅಧ್ಯಕ್ಷರು/ಕಾರ್ಯಕ್ರಮ ಅಧಿಕಾರಿ', fontSize: 11, bold: true },
-                        { text: (rd.panchayat_NameRegional || '') + ' ಗ್ರಾಮ ಪಂಚಾಯತಿ', fontSize: 11 },
+                        { text: (rd.panchayat_NameRegional || '').split(',')[0].trim() + ' ಗ್ರಾಮ ಪಂಚಾಯತಿ', fontSize: 11 },
                         { text: (rd.blockNameRegional || '') + ' ತಾಲ್ಲೂಕು', fontSize: 11 },
                         { text: (rd.districtNameRegional || '') + ' ಜಿಲ್ಲೆ', fontSize: 11 }
                     ]
@@ -99,12 +99,12 @@ function generatecompletion() {
                     table: {
                         widths: ['*'],
                         body: [
-                            [{ text: 'ಕಾಮಗಾರಿ ಸಂಕೇತ: ' + (rd.workcode || ''), fontSize: 11 }],
-                            [{ text: 'ಕಾಮಗಾರಿ ಹೆಸರು : ' + (rd.workName || ''), fontSize: 11 }],
+                            [{ text: 'ಕಾಮಗಾರಿ ಸಂಕೇತ: ' + (rd.workcode || '').split(',')[0].trim(), fontSize: 11 }],
+                            [{ text: 'ಕಾಮಗಾರಿ ಹೆಸರು : ' + (rd.workName || '').split(',')[0].trim(), fontSize: 11 }],
                             [{
                                 columns: [
                                     { text: 'ಗ್ರಾಮ: ', fontSize: 11, width: '50%' },
-                                    { text: 'ಗ್ರಾಮ ಪಂಚಾಯತ್: ' + (rd.panchayat_NameRegional || ''), fontSize: 11 }
+                                    { text: 'ಗ್ರಾಮ ಪಂಚಾಯತ್: ' + (rd.panchayat_NameRegional || '').split(',')[0].trim(), fontSize: 11 }
                                 ]
                             }],
                             [{ text: 'ಕಾಮಗಾರಿ ಸ್ಥಳ (ಪ್ಲಾಟ್ ಸಂಖ್ಯೆ ಇತ್ಯಾದಿ): ', fontSize: 11 }],
@@ -122,7 +122,16 @@ function generatecompletion() {
                             }]
                         ]
                     },
-                    layout: 'noBorders',
+                    layout: {
+                        hLineWidth: function() { return 0.5; },
+                        vLineWidth: function() { return 0.5; },
+                        hLineColor: function() { return 'black'; },
+                        vLineColor: function() { return 'black'; },
+                        paddingTop:    function() { return 4; },
+                        paddingBottom: function() { return 4; },
+                        paddingLeft:   function() { return 6; },
+                        paddingRight:  function() { return 6; }
+                    },
                     margin: [0, 0, 0, 10]
                 },
                 // ── Social audit & signature ──
