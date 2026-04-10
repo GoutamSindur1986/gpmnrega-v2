@@ -727,27 +727,46 @@ public class ProxyController : ControllerBase
             var r3 = r3str.Split('|');
 
             // ── Step 4: POST txt_keyword2=wagelistno + btn_go=GO ─────────────
-            var p4 = new Dictionary<string,string>(p3);
-            p4["ScriptManager1"]       = "UpdatePanel1|ddl_district";
-            p4["__EVENTTARGET"]        = "";
-            p4["__VIEWSTATE"]          = Uri.UnescapeDataString(Tok(r3,"__VIEWSTATE"));
-            p4["__VIEWSTATEGENERATOR"] = Uri.UnescapeDataString(Tok(r3,"__VIEWSTATEGENERATOR"));
-            p4["__EVENTVALIDATION"]    = Uri.UnescapeDataString(Tok(r3,"__EVENTVALIDATION"));
-            p4["districtname"]         = distName;
-            p4["hhshortname"]          = "KN";
-            p4["searchname"]           = "WageList";
-            p4["statename"]            = "KARNATAKA";
-            p4["txt_keyword2"]         = wagelistno;
-            p4["btn_go"]               = "GO";
+            // IMPORTANT: Step 4 is a SYNCHRONOUS full-page POST — no __ASYNCPOST,
+            // no ScriptManager1. Mirrors original getWageListData.aspx.cs exactly.
+            // Steps 1-3 are UpdatePanel async POSTs; step 4 is NOT.
+            // Sending __ASYNCPOST here causes NIC to return a partial ScriptManager
+            // response instead of full HTML, breaking Digest extraction.
+            var p4 = new Dictionary<string,string>
+            {
+                ["__EVENTARGUMENT"]      = "",
+                ["__EVENTTARGET"]        = "",
+                ["__LASTFOCUS"]          = "",
+                ["__VIEWSTATE"]          = Uri.UnescapeDataString(Tok(r3,"__VIEWSTATE")),
+                ["__VIEWSTATEGENERATOR"] = Uri.UnescapeDataString(Tok(r3,"__VIEWSTATEGENERATOR")),
+                ["__VIEWSTATEENCRYPTED"] = "",
+                ["__EVENTVALIDATION"]    = Uri.UnescapeDataString(Tok(r3,"__EVENTVALIDATION")),
+                ["as_fid"]               = Uri.UnescapeDataString(Inp(s0doc,"as_fid")),
+                ["as_sfid"]              = Uri.UnescapeDataString(Inp(s0doc,"as_sfid")),
+                ["ddl_search"]           = "WageList",
+                ["ddl_state"]            = "15",
+                ["ddl_district"]         = distCode,
+                ["districtname"]         = distName,
+                ["hhshortname"]          = "KN",
+                ["searchname"]           = "WageList",
+                ["statename"]            = "KARNATAKA",
+                ["txt_keyword2"]         = wagelistno,
+                ["btn_go"]               = "GO"
+            };
             var r4str = await (await c.PostAsync(searchUrl,
                 new FormUrlEncodedContent(p4))).Content.ReadAsStringAsync();
 
             // ── Extract Digest and fetch master_search1.aspx ──────────────────
+            // NIC's window.open() call: window.open('url&Digest=XXX', 'popup_window', ...)
+            // Handle both single-quote and double-quote variants.
             int digestIdx = r4str.IndexOf("&Digest=", StringComparison.Ordinal);
             int endIdx    = r4str.IndexOf("', 'popup_window',", StringComparison.Ordinal);
+            if (endIdx < 0) // try double-quote variant
+                endIdx = r4str.IndexOf("\", \"popup_window\",", StringComparison.Ordinal);
             if (digestIdx < 0 || endIdx < digestIdx)
             {
-                _log.LogWarning("getwagelist: no Digest found in step-4 response for wageList={WL}", wagelistno);
+                _log.LogWarning("getwagelist: no Digest found in step-4 response for wageList={WL}. Response snippet: {Snip}",
+                    wagelistno, r4str.Length > 500 ? r4str[..500] : r4str);
                 return Ok(new { html = r4str });
             }
             var digest = r4str.Substring(digestIdx, endIdx - digestIdx);
