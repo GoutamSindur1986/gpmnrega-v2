@@ -1777,6 +1777,46 @@ public class ProxyController : ControllerBase
 
     // ParseWorkData removed — getworkdata now does multi-step crawl
     // and returns JSON dictionary directly (same format as original)
+
+    // ── Trial watermark handler — mirrors converter.aspx.cs BeforeRenderPdfPageEvent ──
+    // Stamps each PDF page with a "TRIAL VERSION" text overlay for non-subscribers.
+    private static void ConverterWatermark(BeforeRenderPdfPageParams e)
+    {
+        try
+        {
+            var page = e.Page;
+            float w  = page.ClientRectangle.Width;
+            float h  = page.ClientRectangle.Height;
+            float x  = w / 3f;
+            float y  = h / 2f;
+
+            var titleFont = page.Document.AddFont(
+                new System.Drawing.Font("Times New Roman", 20,
+                    System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point));
+
+            var linkFont = page.Document.AddFont(
+                new System.Drawing.Font("Times New Roman", 15,
+                    System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point));
+            linkFont.IsUnderline = true;
+
+            var titleEl = new TextElement(x, y, "This is trial version", titleFont);
+            var res = page.AddElement(titleEl);
+
+            float  linkY    = res.EndPageBounds.Bottom + 15;
+            string linkText = "CLICK HERE TO BUY PAID VERSION!";
+            float  linkW    = linkFont.GetTextWidth(linkText);
+            var    linkEl   = new TextElement(x, linkY, linkText, linkFont);
+            linkEl.ForeColor = System.Drawing.Color.Navy;
+            page.AddElement(linkEl);
+
+            var linkRect = new System.Drawing.RectangleF(x, linkY, linkW, 20);
+            page.AddElement(new LinkUrlElement(linkRect, "https://www.gpmnrega.com/auth/PaySub"));
+        }
+        catch
+        {
+            // watermark failure must never abort the PDF
+        }
+    }
 }
 
 // ── Public proxy for panchayat code lookup (no auth needed on login page) ──
@@ -1807,48 +1847,6 @@ public class GpCodesController : ControllerBase
         catch
         {
             return Content("<html><body><label>Error</label></body></html>", "text/html");
-        }
-    }
-
-    // ── Trial watermark handler — mirrors converter.aspx.cs BeforeRenderPdfPageEvent ──
-    // Stamps each PDF page with a "TRIAL VERSION" text overlay for non-subscribers.
-    private static void ConverterWatermark(BeforeRenderPdfPageParams e)
-    {
-        try
-        {
-            var page   = e.Page;
-            float w    = page.ClientRectangle.Width;
-            float h    = page.ClientRectangle.Height;
-            float x    = w / 3f;
-            float y    = h / 2f;
-
-            var titleFont = page.Document.AddFont(
-                new System.Drawing.Font("Times New Roman", 20, System.Drawing.FontStyle.Bold,
-                                        System.Drawing.GraphicsUnit.Point));
-
-            var linkFont = page.Document.AddFont(
-                new System.Drawing.Font("Times New Roman", 15, System.Drawing.FontStyle.Bold,
-                                        System.Drawing.GraphicsUnit.Point));
-            linkFont.IsUnderline = true;
-
-            // "TRIAL VERSION" title
-            var titleEl = new TextElement(x, y, "This is trial version", titleFont);
-            var res = page.AddElement(titleEl);
-
-            // "BUY NOW" link below title
-            float linkY     = res.EndPageBounds.Bottom + 15;
-            string linkText = "CLICK HERE TO BUY PAID VERSION!";
-            float linkW     = linkFont.GetTextWidth(linkText);
-            var linkEl      = new TextElement(x, linkY, linkText, linkFont);
-            linkEl.ForeColor = System.Drawing.Color.Navy;
-            page.AddElement(linkEl);
-
-            var linkRect = new System.Drawing.RectangleF(x, linkY, linkW, 20);
-            page.AddElement(new LinkUrlElement(linkRect, "https://www.gpmnrega.com/auth/PaySub"));
-        }
-        catch
-        {
-            // watermark failure must never abort the PDF
         }
     }
 }
