@@ -776,22 +776,41 @@ public class ProxyController : ControllerBase
 
             var wg1html = await NicGetWithRetryAsync(c, wgUrl);
             var wgDoc   = new HtmlDocument(); wgDoc.LoadHtml(wg1html);
-            var wgLinks = wgDoc.DocumentNode.SelectNodes("//a");
 
-            if (wgLinks != null && wgLinks.Count >= 4)
+            // ── Look for a direct srch_wg_dtl link ───────────────────────────
+            // master_search1.aspx shows wage list links directly when a single
+            // financial year matches. We search specifically for srch_wg_dtl.aspx
+            // links rather than relying on fragile positional indexing.
+            var directHref = FindWageListLink(wgDoc);
+            if (directHref != null)
             {
-                var wgPage = "https://mnregaweb4.nic.in/netnrega/" + wgLinks[2].GetAttributeValue("href","");
-                var finalHtml = await NicGetWithRetryAsync(c, wgPage);
-                return Ok(new { html = finalHtml });
+                var fullUrl = directHref.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                    ? directHref
+                    : "https://mnregaweb4.nic.in/netnrega/" + directHref;
+                return Ok(new { html = await NicGetWithRetryAsync(c, fullUrl) });
             }
 
-            // ── Fallback: try each financial year via ddl_yr POST ─────────────
-            foreach (var fy in new[] { finYear0, finYear1 }.Where(f => !string.IsNullOrWhiteSpace(f)))
+            // ── Fallback: year dropdown ──────────────────────────────────────
+            // When multiple financial years exist NIC shows a ddl_yr dropdown.
+            // Parse the actual <option> values from the page so we try exactly
+            // what NIC offers, rather than guessing from the srch date.
+            var yearOpts = ExtractYearOptions(wgDoc);
+            if (!yearOpts.Any())
             {
-                var vs  = Uri.UnescapeDataString(Vs(wgDoc,"__VIEWSTATE"));
-                var vsg = Uri.UnescapeDataString(Vs(wgDoc,"__VIEWSTATEGENERATOR"));
-                var ev  = Uri.UnescapeDataString(Vs(wgDoc,"__EVENTVALIDATION"));
-                if (string.IsNullOrWhiteSpace(vs)) break;
+                // No dropdown — use computed financial years as best guess
+                yearOpts = new[] { finYear0, finYear1 }
+                    .Where(f => !string.IsNullOrWhiteSpace(f)).ToList();
+            }
+
+            _log.LogInformation("getwagelist: year dropdown options for {WL}: [{Yrs}]",
+                wagelistno, string.Join(", ", yearOpts));
+
+            foreach (var fy in yearOpts)
+            {
+                // Extract ViewState from the current wgDoc (refreshed each iteration)
+                var vs  = wgDoc.GetElementbyId("__VIEWSTATE")?.GetAttributeValue("value","") ?? "";
+                var vsg = wgDoc.GetElementbyId("__VIEWSTATEGENERATOR")?.GetAttributeValue("value","") ?? "";
+                var ev  = wgDoc.GetElementbyId("__EVENTVALIDATION")?.GetAttributeValue("value","") ?? "";
 
                 var py = new Dictionary<string,string>
                 {
@@ -806,17 +825,21 @@ public class ProxyController : ControllerBase
                 };
                 var fyHtml = await (await c.PostAsync(wgUrl,
                     new FormUrlEncodedContent(py))).Content.ReadAsStringAsync();
-                wgDoc.LoadHtml(fyHtml);
-                var fyLinks = wgDoc.DocumentNode.SelectNodes("//a");
-                if (fyLinks != null && fyLinks.Count >= 4)
+                var fyDoc  = new HtmlDocument(); fyDoc.LoadHtml(fyHtml);
+                wgDoc = fyDoc; // refresh ViewState for the next iteration
+
+                var fyHref = FindWageListLink(fyDoc);
+                if (fyHref != null)
                 {
-                    var wgPage2 = "https://mnregaweb4.nic.in/netnrega/" + fyLinks[2].GetAttributeValue("href","");
-                    var finalHtml2 = await NicGetWithRetryAsync(c, wgPage2);
-                    return Ok(new { html = finalHtml2 });
+                    var fullUrl2 = fyHref.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? fyHref
+                        : "https://mnregaweb4.nic.in/netnrega/" + fyHref;
+                    return Ok(new { html = await NicGetWithRetryAsync(c, fullUrl2) });
                 }
             }
 
-            _log.LogWarning("getwagelist: no wage list link found for {WL}", wagelistno);
+            _log.LogWarning("getwagelist: no wage list link found for {WL}. Years tried: [{Yrs}]",
+                wagelistno, string.Join(", ", yearOpts));
             return Ok(new { html = wg1html });
         }
         catch (Exception ex)
@@ -1796,6 +1819,41 @@ public class ProxyController : ControllerBase
 
     // ParseWorkData removed — getworkdata now does multi-step crawl
     // and returns JSON dictionary directly (same format as original)
+
+    // ── Wage list link detection helpers ─────────────────────────────────────────
+    // FindWageListLink: searches a parsed master_search1.aspx page for a link
+    // pointing to srch_wg_dtl.aspx (the final wage list detail page on NIC).
+    // When NIC finds the wage list it puts an href to srch_wg_dtl.aspx in a table
+    // row. When only a year dropdown is shown there are no such links.
+    private static string? FindWageListLink(HtmlDocument doc)
+    {
+        var links = doc.DocumentNode.SelectNodes("//a[@href]");
+        if (links == null) return null;
+        return links
+            .Select(a => a.GetAttributeValue("href", ""))
+            .FirstOrDefault(h =>
+                h.Contains("srch_wg_dtl", StringComparison.OrdinalIgnoreCase) ||
+                h.Contains("wg_dtl",      StringComparison.OrdinalIgnoreCase));
+    }
+
+    // ExtractYearOptions: parses the ddl_yr <select> on master_search1.aspx and
+    // returns all non-placeholder option values (e.g. ["2023-2024","2022-2023"]).
+    // Returns an empty list when the dropdown is not present on the page.
+    private static List<string> ExtractYearOptions(HtmlDocument doc)
+    {
+        var sel = doc.DocumentNode.SelectSingleNode(
+            "//select[@id='ddl_yr' or @name='ddl_yr']");
+        if (sel == null) return new List<string>();
+        var opts = sel.SelectNodes("option");
+        if (opts == null) return new List<string>();
+        return opts
+            .Select(o => o.GetAttributeValue("value", "").Trim())
+            .Where(v => !string.IsNullOrWhiteSpace(v)
+                     && !v.Equals("Select", StringComparison.OrdinalIgnoreCase)
+                     && !v.Equals("0",      StringComparison.OrdinalIgnoreCase)
+                     && !v.Equals("-1",     StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
 
     // ── Trial watermark handler — mirrors converter.aspx.cs BeforeRenderPdfPageEvent ──
     // Stamps each PDF page with a "TRIAL VERSION" text overlay for non-subscribers.
