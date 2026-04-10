@@ -79,7 +79,7 @@ function generateworkorder() {
                 {
                     text: 'ಕಾಮಗಾರಿ ಆದೇಶ ಪತ್ರ',
                     fontSize: 14, bold: true, alignment: 'center',
-                    margin: [0, 6, 0, 8]
+                    margin: [0, 4, 0, 4]
                 },
 
                 // ── Subject / Reference ───────────────────────────────────────
@@ -109,7 +109,7 @@ function generateworkorder() {
                 // ── Body paragraph ────────────────────────────────────────────
                 {
                     fontSize: 12,
-                    margin: [0, 0, 0, 8],
+                    margin: [0, 0, 0, 4],
                     text: [
                         '    ಮೇಲ್ಕಾಣಿಸಿದ ವಿಷಯಕ್ಕೆ ಸಂಬಂಧಿಸಿದಂತೆ ',
                         { text: workYear, bold: true },
@@ -119,7 +119,7 @@ function generateworkorder() {
 
                 // ── Work details table ────────────────────────────────────────
                 {
-                    margin: [0, 0, 0, 8],
+                    margin: [0, 0, 0, 4],
                     table: {
                         widths: [30, 80, 100, '*', 80],
                         body: [
@@ -132,7 +132,7 @@ function generateworkorder() {
                             ],
                             [
                                 { text: '1', style: 'tdCell', fontSize: 12 },
-                                { text: panch, style: 'tdCell', fontSize: 12 },
+                                { text: '', style: 'tdCell', fontSize: 12 },
                                 { text: workCode, style: 'tdCell', fontSize: 12 },
                                 { text: workName, style: 'tdCell', fontSize: 12 },
                                 { text: expense, style: 'tdCell', fontSize: 12 }
@@ -150,7 +150,7 @@ function generateworkorder() {
                 // ── Conditions (ಷರತ್ತುಗಳು) ────────────────────────────────────
                 { text: 'ಷರತ್ತುಗಳು:-', fontSize: 12, margin: [0, 0, 0, 4] },
                 {
-                    fontSize: 12,
+                    fontSize: 11,
                     ol: [
                         'ಮಹಾತ್ಮಾಗಾಂಧಿ ನರೇಗಾ ಯೋಜನೆಗೆ ಸಂಬಂಧಿಸಿದ ಸರಕಾರದ ಮಾರ್ಗಸೂಚಿ ಹಾಗೂ ಸುತ್ತೋಲೆಯಲ್ಲಿ ಅಳವಡಿಸಿದ ನಿಯಮಗಳಿಗೆ ಒಳಪಟ್ಟು ಕಾಮಗಾರಿ ಪ್ರಾರಂಭಿಸುವುದು.',
                         'ಕಾಮಗಾರಿ ಪ್ರಾರಂಭಸುವುದಕ್ಕಿಂತ ಮುಂಚಿತವಾಗಿ ಕಾಮಗಾರಿ ಸ್ಥಳದಲ್ಲಿ ಸಾರ್ವಜನಿಕ ಮಾಹಿತಿ ಫಲಕ(ಅಋ) ಕಡ್ಡಾಯವಾಗಿ ಆಳವಡಿಸುವುದು ಹಾಗೂ ಜಿಯೋ ಟ್ಯಾಗ ಮಾಡಿದ ಪೋಟೋ ಕಡತಕ್ಕೆ ಲಗತ್ತಿಸುವುದು.',
@@ -165,21 +165,19 @@ function generateworkorder() {
                 },
 
                 // ── Signature block ───────────────────────────────────────────
-                { text: '\n' },
                 {
                     text: 'ಪಂಚಾಯತಿ ಅಭಿವೃದ್ದಿ ಅಧಿಕಾರಿಗಳು/ಅಧ್ಯಕ್ಷರು',
                     fontSize: 12, alignment: 'right'
                 },
                 {
                     text: 'ಗ್ರಾಮ ಪಂಚಾಯತಿ ' + panch,
-                    fontSize: 12, alignment: 'right', margin: [0, 0, 0, 10]
+                    fontSize: 12, alignment: 'right', margin: [0, 0, 0, 4]
                 },
 
                 // ── Addressee block ───────────────────────────────────────────
                 { text: 'ಗೆ,', fontSize: 12 },
                 { text: 'ತಾಂತ್ರಿಕ ಸಹಾಯಕರು/ಬಿ.ಎಫ್.ಟಿ', fontSize: 12 },
                 { text: 'ಗ್ರಾಮ ಪಂಚಾಯತಿ ' + panch, fontSize: 12 },
-                { text: '\n' },
                 { text: 'ಪ್ರತಿ ಮಾಹಿತಿಗಾಗಿ:', fontSize: 12 },
                 {
                     fontSize: 12,
