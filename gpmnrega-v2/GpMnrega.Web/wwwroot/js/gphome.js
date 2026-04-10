@@ -1863,4 +1863,3 @@ window.loadNMR = loadNMR;
 window.parseWorkNmrs = parseWorkNmrs;
 window.bindNMRs = bindNMRs;
 window.PMIAY = PMIAY;
-           
