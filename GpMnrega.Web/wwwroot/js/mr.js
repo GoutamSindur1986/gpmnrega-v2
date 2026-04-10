@@ -121,194 +121,172 @@ function loadNMRDataForFormblk(elm) {
     window.wasmGeneratePdf({ type: 'nmr', data: { accdata: tablerows, jcdata: meta } });
 }
 
-// ── Wage List (multi-step NIC fetch) ─────────────────────────────
-// Step 1: fetch NMR page → extract wage list IDs
-// Step 2: for each ID, fetch wage list details via proxy
+// ── Wage List (direct port of old GPMNREGA loadWageListData) ──────
+// Step 1: GET NMR page via proxy → extract wage list IDs from table
+// Step 2: for each ID, GET wage list detail via proxy (4-step NIC crawl)
+// Step 3: if FTO button → extract FTO numbers → fetch each FTO detail
+//         if WageList button → convert to PDF via converter
 function loadWageListData(elm) {
-    var nmrArr = reportData.NMRS.filter(function(e) { return e.NMRNO == elm.dataset.nmrno; });
-    if (!nmrArr.length) { gpToast('NMR data not found', 'warning'); return; }
-    var nmr = nmrArr[0];
-
-    // Check cache first
-    var cacheKey = 'wl_' + reportData.panchayat_code + '_' + nmr.NMRNO;
-    var cached = _mrLsGet(cacheKey);
-    if (cached) {
-        console.log('[MR] Wage list from cache');
-        _processWageListResponse(cached, elm, nmr.DateFrom);
-        return;
-    }
+    var data = reportData.NMRS.filter(e => e.NMRNO == elm.dataset.nmrno);
+    if (!data.length) { gpToast('NMR data not found', 'warning'); return; }
 
     gpShowLoading('Fetching Wage List…');
     $.ajax({
         url: _MR_API + 'getwagelist',
         type: 'GET',
-        data: { nmr_link: nmr.url },
+        data: { nmr_link: data[0].url },
+        startDate: data[0].DateFrom,
         success: function(resp) {
             var html = resp && resp.html ? resp.html : resp;
-            if (!html) { gpHideLoading(); gpToast('No wage list data found', 'warning'); return; }
-            _mrLsSet(cacheKey, html);
-            _processWageListResponse(html, elm, nmr.DateFrom);
+            // block_code comes from the NMR URL query string
+            var blockcode = new URLSearchParams((data[0].url || '').split('?')[1] || '').get('block_code') || reportData.block_code;
+
+            var form = $(html).filter((i, e) => e.id == 'form1');
+            if (form.length == 0)
+                form = $(html).filter((i, e) => e.id == 'aspnetForm');
+
+            var table = form[0] && form[0].querySelectorAll("[id$='ContentPlaceHolder1_grdShowRecords'] tr");
+            if (!table || table.length === 0) {
+                gpHideLoading();
+                gpToast('No Wagelist found.', 'warning');
+                return;
+            }
+
+            var wageListId;
+            $(table[0].cells).each((i, e) => {
+                if (e.textContent.trim() == 'Wagelist No.') wageListId = i;
+            });
+
+            var validwages = [];
+            for (var i = 1; i < table.length - 1; i++) {
+                var wagelist = table[i].cells[wageListId] && table[i].cells[wageListId].textContent.trim();
+                if (wagelist && validwages.indexOf(wagelist) == -1 && wagelist.length > 2)
+                    validwages.push(wagelist);
+            }
+
+            if (!validwages.length) {
+                gpHideLoading();
+                gpToast('No Wagelist found.', 'warning');
+                return;
+            }
+
+            var startDate = data[0].DateFrom;
+            validwages.forEach(function(wlNo) {
+                var str = 'state_code=' + reportData.state_code +
+                    '&district_code=' + reportData.district_code +
+                    '&state_name=' + reportData.stateName +
+                    '&district_name=' + reportData.districtName +
+                    '&block_code=' + blockcode +
+                    '&srch=' + startDate +
+                    '&wageList=' + wlNo +
+                    '&short_name=' + reportData.state_shortname;
+                $.ajax({
+                    url: _MR_API + 'getwagelist',
+                    type: 'GET',
+                    data: { nmr_link: wagelistUrl + str },
+                    wagelistnumber: wlNo,
+                    success: function(resp) {
+                        var wlHtml = resp && resp.html ? resp.html : resp;
+                        var form = $(wlHtml).filter((i, e) => e.id == 'form1');
+                        if (form.length == 0)
+                            form = $(wlHtml).filter((i, e) => e.id == 'aspnetForm');
+                        // $(wlHtml)[5] is the form element in NIC's page structure;
+                        // mirrors the original check before accessing form.action
+                        if ($(wlHtml)[5] !== undefined && form[0] &&
+                            form[0].querySelectorAll('table').length > 0 &&
+                            form[0].querySelectorAll('table')[0].querySelectorAll('tr').length > 1) {
+                            if (elm.name == 'FTO') {
+                                var urlParams = new URLSearchParams($(wlHtml)[5].action || '');
+                                var finyear = urlParams.get('fin_year');
+                                loadFTOData(wlHtml, finyear);
+                            } else {
+                                downloadForms(wlHtml, 'WageList', this.wagelistnumber, '');
+                            }
+                        }
+                    },
+                    error: function() {
+                        gpHideLoading();
+                        gpToast('Error downloading wagelist: ' + wlNo, 'error');
+                    }
+                });
+            });
         },
-        error: function(xhr) {
+        error: function() {
             gpHideLoading();
-            gpToast('Error fetching wage list: ' + (xhr.statusText || 'network error'), 'error');
+            gpToast('Error fetching wage list.', 'error');
         }
     });
 }
 
 function _parseNicHtml(html) {
     // DOMParser reliably handles full HTML documents (<!DOCTYPE html><html>...</html>)
-    // unlike jQuery $(html).filter() which can miss elements not at top level
+    // unlike jQuery $(html).filter() which can miss elements not at top level.
+    // Used by printFilledNMR.
     var parser = new DOMParser();
     var doc = parser.parseFromString(html, 'text/html');
     var form = doc.getElementById('form1') || doc.getElementById('aspnetForm');
     return { doc: doc, form: form };
 }
 
-function _actionBlockCode(form) {
-    // form.action is a full URL or relative path like "page.aspx?block_code=X&..."
-    // Split on '?' to get only the query string before feeding to URLSearchParams
-    try {
-        var qs = (form.action || '').split('?')[1] || '';
-        return new URLSearchParams(qs).get('block_code') || reportData.block_code;
-    } catch(e) { return reportData.block_code; }
-}
-
-function _processWageListResponse(html, elm, startDate) {
-    var parsed = _parseNicHtml(html);
-    var form = parsed.form;
-    if (!form) { gpHideLoading(); gpToast('No Wage List found (page structure unexpected)', 'warning'); return; }
-
-    var table = form.querySelectorAll("[id$='ContentPlaceHolder1_grdShowRecords'] tr");
-    if (!table.length) { gpHideLoading(); gpToast('No Wage List found', 'warning'); return; }
-
-    // Find the column index for 'Wagelist No.' in the header row
-    var wageListId = -1;
-    var hcells = table[0].cells;
-    for (var h = 0; h < hcells.length; h++) {
-        if (hcells[h].textContent.trim() === 'Wagelist No.') { wageListId = h; break; }
-    }
-
-    var validwages = [];
-    for (var i = 1; i < table.length - 1; i++) {
-        var wl = (wageListId >= 0 && table[i].cells[wageListId])
-            ? table[i].cells[wageListId].textContent.trim() : '';
-        if (validwages.indexOf(wl) === -1 && wl.length > 2) validwages.push(wl);
-    }
-
-    if (!validwages.length) { gpHideLoading(); gpToast('No valid Wage List IDs found', 'warning'); return; }
-
-    var blockcode = _actionBlockCode(form);
-
-    // For both WageList and FTO: fetch wage list detail HTML via proxy,
-    // then either generate PDF (WageList) or extract FTO numbers (FTO).
-    validwages.forEach(function(wlNo) {
-        var str = 'state_code=' + reportData.state_code +
-            '&district_code=' + reportData.district_code +
-            '&state_name=' + encodeURIComponent(reportData.stateName) +
-            '&district_name=' + encodeURIComponent(reportData.districtName) +
-            '&block_code=' + blockcode +
-            '&srch=' + encodeURIComponent(startDate || '') +
-            '&wageList=' + encodeURIComponent(wlNo) +
-            '&short_name=' + reportData.state_shortname;
-
-        $.ajax({
-            url: _MR_API + 'getwagelist',
-            type: 'GET',
-            data: { nmr_link: wagelistUrl + str },
-            wlno: wlNo,
-            success: function(resp) {
-                var wlHtml = resp && resp.html ? resp.html : resp;
-                var wp = _parseNicHtml(wlHtml);
-
-                if (elm.name === 'FTO') {
-                    // Extract FTO numbers from wage list detail page, then fetch each
-                    gpHideLoading();
-                    if (wp.form) {
-                        var qs = (wp.form.action || '').split('?')[1] || '';
-                        var finyear = new URLSearchParams(qs).get('fin_year') || reportData.fincialYear;
-                        loadFTOData(wp.doc, wp.form, finyear);
-                    } else {
-                        gpToast('Could not parse wage list page for FTO', 'warning');
-                    }
-                } else {
-                    // WageList: send HTML to /api/proxy/converter → PDF download
-                    if (typeof downloadForms === 'function') {
-                        downloadForms(wlHtml, 'WageList', this.wlno, '');
-                    } else {
-                        gpHideLoading();
-                        gpToast('downloadForms not available', 'error');
-                    }
-                }
-            },
-            error: function() {
-                gpHideLoading();
-                gpToast('Error fetching wage list: ' + wlNo, 'error');
-            }
-        });
-    });
-}
-
-// ── FTO data ─────────────────────────────────────────────────────
-// Called with a pre-parsed doc/form (from _processWageListResponse)
-// Opens each FTO page directly on NIC in a new tab
-function loadFTOData(doc, form, finyear) {
-    // Accept either a pre-parsed form element or a raw HTML string (legacy call path)
-    if (typeof doc === 'string') {
-        var p = _parseNicHtml(doc);
-        doc  = p.doc;
-        form = p.form;
-    }
-    if (!form) { gpToast('FTO page structure unexpected', 'warning'); return; }
+// ── FTO data (direct port of old GPMNREGA loadFTOData) ────────────
+// Called with raw HTML string from the wage list detail page.
+// Extracts FTO numbers from column 13, fetches each FTO detail via
+// proxy, then passes the centre-div HTML to downloadForms for PDF.
+function loadFTOData(data, finyear) {
+    var html = (data && data.html) ? data.html : data;
+    var form = $(html).filter((i, e) => e.id == 'form1');
+    if (form.length == 0)
+        form = $(html).filter((i, e) => e.id == 'aspnetForm');
+    if (form.length == 0)
+        $(html).filter((i, e) => e.id == 'aspnetForm');
 
     if (!finyear) {
-        var qs = (form.action || '').split('?')[1] || '';
-        finyear = new URLSearchParams(qs).get('fin_year') || reportData.fincialYear;
+        var d = new URLSearchParams((form[0] && form[0].action) || '');
+        finyear = d.get('fin_year');
     }
 
-    // FTO numbers are in column 13 (1-indexed → cells[12] in 0-indexed td:nth-child(13))
-    var ftos = form.querySelectorAll('td:nth-child(13)');
+    var ftos = form[0] && form[0].querySelectorAll('td:nth-child(13)');
     var validfto = [];
-    for (var i = 1; i < ftos.length; i++) {
-        var ftoid = ftos[i].textContent.replace(/\s+/g, '');
-        if (validfto.indexOf(ftoid) < 0 && ftoid.length > 3) validfto.push(ftoid);
+    for (var i = 1; ftos && i < ftos.length; i++) {
+        var ftoid = ftos[i].textContent.replaceAll(' ', '').replaceAll('\n', '');
+        if (validfto.indexOf(ftoid) < 0 && ftoid.length > 3)
+            validfto.push(ftoid);
     }
 
-    if (!validfto.length) { gpToast('No FTO numbers found', 'warning'); return; }
+    if (!validfto.length) { gpToast('No FTO numbers found.', 'warning'); return; }
 
     gpToast('Fetching ' + validfto.length + ' FTO(s)…', 'info');
     validfto.forEach(function(ftoNo) {
-        // Fetch FTO detail HTML via proxy (mirrors original getftoDetails.aspx navigation)
-        // then convert to PDF via /api/proxy/converter
+        // Build the full NIC FTO URL and pass it directly to the proxy —
+        // mirrors old code: data: ftoUrl + str → ../api/getftoDetails
+        var str = 'page=p&state_code=' + reportData.state_code +
+            '&state_name=' + reportData.stateName +
+            '&district_code=' + reportData.district_code +
+            '&district_name=' + reportData.districtName +
+            '&block_code=' + reportData.block_code +
+            '&block_name=' + reportData.blockName +
+            '&panchayat_code=' + reportData.panchayat_code +
+            '&panchayat_name=' + reportData.panchayatName +
+            '&flg=W&fin_year=' + finyear +
+            '&fto_no=' + ftoNo +
+            '&source=national&Digest=FlTx';
         $.ajax({
             url: _MR_API + 'getftodetails',
             type: 'GET',
-            data: {
-                fto_no:         ftoNo,
-                district_code:  reportData.district_code,
-                block_code:     reportData.block_code,
-                panchayat_code: reportData.panchayat_code
-            },
+            data: { fto_link: ftoUrl + str },
             ftonumber: ftoNo,
             success: function(resp) {
                 var ftoHtml = resp && resp.html ? resp.html : resp;
-                var fp = _parseNicHtml(ftoHtml);
-                // Extract printable centre div like original: form[0].querySelectorAll('center')[0]
-                var printHtml = ftoHtml;
-                if (fp.form) {
-                    var center = fp.form.querySelector('center');
-                    if (center) printHtml = center.outerHTML;
-                }
-                if (typeof downloadForms === 'function') {
-                    downloadForms(printHtml, 'FTO', '', this.ftonumber);
-                } else {
-                    gpHideLoading();
-                    gpToast('downloadForms not available', 'error');
-                }
+                var form = $(ftoHtml).filter((i, e) => e.id == 'form1');
+                if (form.length == 0)
+                    form = $(ftoHtml).filter((i, e) => e.id == 'aspnetForm');
+                var centers = form[0] && form[0].querySelectorAll('center');
+                var printHtml = (centers && centers[0]) ? centers[0].outerHTML : ftoHtml;
+                downloadForms(printHtml, 'FTO', '', this.ftonumber);
             },
             error: function() {
                 gpHideLoading();
-                gpToast('Error fetching FTO: ' + ftoNo, 'error');
+                gpToast('Error downloading fto: ' + ftoNo, 'error');
             }
         });
     });

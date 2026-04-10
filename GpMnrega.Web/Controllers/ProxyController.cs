@@ -923,13 +923,16 @@ public class ProxyController : ControllerBase
     }
 
     // ── GET /api/proxy/getftodetails ───────────────────────────────
-    // Replaces: /api/getftoDetails.aspx
-    // Mirrors getftoDetails.aspx.cs exactly:
-    //   1. Parse financial year from FTO number (month 1-3 → previous year)
-    //   2. Navigate state→district→block→panchayat→FTO link
-    //   3. Return raw FTO detail HTML
+    // Two modes:
+    //  1. fto_link supplied → simple GET passthrough (mirrors old getftoDetails.aspx
+    //     which just fetched the NIC URL sent from the client). This is the mode
+    //     used by the ported mr.js loadFTOData.
+    //  2. fto_no + district_code + block_code + panchayat_code → multi-level
+    //     NIC navigation (state→district→block→panchayat→FTO). Legacy mode kept
+    //     for backwards compat.
     [HttpGet("getftodetails")]
     public async Task<IActionResult> GetFtoDetails(
+        [FromQuery] string? fto_link,
         [FromQuery] string fto_no,
         [FromQuery] string district_code,
         [FromQuery] string block_code,
@@ -937,6 +940,17 @@ public class ProxyController : ControllerBase
     {
         try
         {
+            // ── Mode 1: direct URL passthrough ────────────────────────────────
+            // Client builds the full NIC FTO URL (ftoUrl + str) and passes it here.
+            // We just fetch it and return the HTML — same as original getftoDetails.aspx.
+            if (!string.IsNullOrWhiteSpace(fto_link))
+            {
+                using var cDirect = CreateNicClient();
+                var directHtml = await NicGetWithRetryAsync(cDirect, fto_link);
+                return Ok(new { html = directHtml });
+            }
+
+            // ── Mode 2: multi-level navigation ────────────────────────────────
             // Digest map keyed by financial year (mirrors original dictionary)
             var digestMap = new Dictionary<string,string>
             {
