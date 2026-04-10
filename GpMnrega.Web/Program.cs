@@ -57,6 +57,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 
+// ── Data Protection — persist keys so auth cookies survive app restarts ─
+// Without this, in-memory keys regenerate on each restart, invalidating
+// all existing session cookies and causing 401 on every API call.
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new System.IO.DirectoryInfo(
+        builder.Configuration["Auth:DataProtectionKeysPath"]
+        ?? System.IO.Path.Combine(builder.Environment.ContentRootPath, "DataProtectionKeys")))
+    .SetApplicationName("GpMnrega");
+
 // ── Session (for temp data between requests) ───────────────────────
 builder.Services.AddSession(o =>
 {

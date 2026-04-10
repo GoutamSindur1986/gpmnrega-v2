@@ -114,7 +114,8 @@ function loadNMRDataForFormblk(elm) {
         workname:    reportData.workName        || '',
         workcode:    reportData.workcode        || '',
         agency:      reportData.executionAgency || '',
-        techStaff:   reportData.technicalstaff  || ''
+        techStaff:   reportData.technicalstaff  || '',
+        finYear:     reportData.fincialYear       || ''
     };
 
     gpHideLoading();
@@ -452,6 +453,23 @@ function buildBlankNMR(accdata, jcdata, workdata) {
             pageOrientation: 'landscape',
             pageMargins:     [10, 10, 10, 10],
             content: [
+                // ── MB book / signature top row ─────────────────────────────────────
+                {
+                    columns: [
+                        {text: 'ಅಳತೆ ಪುಸ್ತಕ (MB) ಸಂಖ್ಯೆ____________ Page No.____________', fontSize: 7, font: 'tunga', width: '*'},
+                        {text: 'Signature of Issuing Officer with seal', fontSize: 7, alignment: 'right', width: 'auto'}
+                    ],
+                    margin: [0, 0, 0, 2]
+                },
+                // ── Title: scheme name + muster roll type ────────────────────────────
+                {
+                    text: [
+                        {text: 'ರಾಷ್ಟ್ರೀಯ ಗ್ರಾಮೀಣ ಉದ್ಯೋಗ ಖಾತರಿ ಯೋಜನೆ\n', font: 'tunga', bold: true, fontSize: 9},
+                        {text: 'ಮಸ್ಟರ್ ರೋಲ್ (For Unskilled Labourer)', font: 'tunga', bold: true, fontSize: 8}
+                    ],
+                    alignment: 'center',
+                    margin: [0, 0, 0, 3]
+                },
                 // Info row 1: State / NMR No / Print Date / District / Block / Panchayat / Fin Year
                 {
                     columns: [

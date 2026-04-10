@@ -20,6 +20,10 @@
     var vidhanSabha = User.FindFirst("VidhanSabha")?.Value ?? "";
     var lokSabha = User.FindFirst("LokSabha")?.Value ?? "";
     var isSubscribed = User.FindFirst("IsSubscribed")?.Value == "true";
+    // Current Indian financial year: April YYYY - March YYYY+1
+    var now = DateTime.Now;
+    var fyStart = now.Month >= 4 ? now.Year : now.Year - 1;
+    var fincialYear = $"{fyStart}-{fyStart + 1}";
 }
 
 @section Styles {
@@ -848,7 +852,8 @@
             blockNameRegional    = blockNameRegional,
             vidhanSabha          = vidhanSabha,
             lokSabha             = lokSabha,
-            isSubscribed         = isSubscribed
+            isSubscribed         = isSubscribed,
+            fincialYear          = fincialYear
         }))
         </script>
 }
